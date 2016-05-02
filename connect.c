@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <hiredis/hiredis.h>
 #include <errno.h>
-
+#include "crc16.h"
+#include <string.h>
 
 #define DEBUG
 void connectRedis(char* ip, int port){
@@ -30,7 +31,7 @@ void __set(redisContext *c,  const char *key, const char *value){
 }
 
 /*
-*
+*once we meet indirection, this function help parse the information
 */
 void __set_redirect(char* str){
 	char *slot,*ip,*port;
@@ -40,11 +41,30 @@ void __set_redirect(char* str){
 	ip++;
 	port = strchr(ip,':');
 	port++;
-	printf("get new ip = %s slot=%s port =%s\n",ip,slot,port);
+	//s means store
+	char* s_slot, *s_ip, *s_port;
+        s_slot = (char*)malloc(ip-slot);
+	strncpy(s_slot,slot,ip-slot-1);
+	s_slot[ip-slot-1]='\0';
+
+	s_ip = (char*)malloc(port-ip);
+	strncpy(s_ip,ip,port-ip-1);
+	s_ip[port-ip-1]='\0';
+
+	s_port = (char*)malloc(sizeof(port)+1);
+	strcpy(s_port,port);
+	printf("get new ip = %s slot=%s port =%s\n",s_ip,s_slot,s_port);
+	free(s_ip);
+	free(s_slot);
+	free(s_port);
 }
 void set(const char *key, const char *value){
 
-	redisContext *c = globalContext;	
+	redisContext *c = globalContext;
+	int myslot;
+	myslot = crc16(key,strlen(key)) & 16383;
+	printf("slot calculated= %d\n",myslot);
+
 	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, value);
 	if (r->type == REDIS_REPLY_STRING) {
 #ifdef DEBUG
