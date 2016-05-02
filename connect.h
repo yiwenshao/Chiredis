@@ -26,13 +26,6 @@ void set(const char *key, const char *value);
 int get(const char *key, char *value);
 redisContext * globalContext;
 
-typedef struct ipContext{
-   char ip[16];
-   redisContext * context;
-}ipContext;
-
-ipContext global[3];
-
 typedef struct parseArgv{
     char * ip;
     redisContext * context;
