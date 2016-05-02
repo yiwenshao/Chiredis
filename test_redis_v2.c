@@ -37,7 +37,7 @@ void __process_cluster_str(char* str){
 void __clusterInfo(){
     redisContext* c = redisConnect("172.16.32.211", 7002);
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
-	printf("%s\n",r->type,r->str);
+	printf("%s\n",r->str);
 }
 
 int main(){
