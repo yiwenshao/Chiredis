@@ -5,7 +5,6 @@
 
 
 //#define DEBUG
-
 void connectRedis(char* ip, int port){
      globalContext = redisConnect("172.16.32.211",7002);
 	 if(globalContext->err){
@@ -78,6 +77,8 @@ void set(const char *key, const char *value)
 	freeReplyObject(r);
 }
 
+
+
 int __get(redisContext*c, const char *key, char *value){
 	redisReply *r = (redisReply *)redisCommand(c, "get %s", key);
 #ifdef DEBUG
@@ -108,6 +109,7 @@ int __get(redisContext*c, const char *key, char *value){
 		return -1;
 	}
 }
+
 
 int get(const char *key, char *value)
 {
@@ -177,6 +179,7 @@ clusterInfo* __clusterInfo(){
     return mycluster;
 }
 
+
 void process_cluterInfo(clusterInfo* mycluster){
     //determine the time of iteration
     int len = mycluster->len;
@@ -233,10 +236,9 @@ void process_cluterInfo(clusterInfo* mycluster){
         mycluster->parse[i]->end_slot = atoi(slot_end);
 
         free(temp_slot_start);
-
     }
-  
 }
+
 void print_clusterInfo_parsed(clusterInfo* mycluster){
     int len = mycluster->len;
     int i;
@@ -295,6 +297,10 @@ void assign_slot(clusterInfo* mycluster){
     }
     printf("count = %d \n",count);
 }
+
+/*
+*This function give each node in the cluster a context connection
+*/
 void __add_context_to_cluster(clusterInfo* mycluster){
    int len = mycluster-> len;
    int i = 0;
@@ -305,18 +311,39 @@ void __add_context_to_cluster(clusterInfo* mycluster){
        if(tempContext->err){
           printf("connection refused in __add_contect_to_cluster\n");
 	  redisFree(tempContext);
-
+	  return;
        }else{
           (mycluster->parse[i])->context;
        }
    }
+   printf("%d connections established!!\n",len);
 }
+
+
+void __remove_context_from_cluster(clusterInfo* mycluster){
+   int len = mycluster-> len;
+   int i = 0;
+   redisContext * tempContext;
+   
+   for(i=0;i<len;i++){
+      redisFree(mycluster->parse[i]->context);
+   }
+   printf("%d connections closed!!\n",len);
+}
+
 
 void disconnectDatabase(){
     __global_disconnect();
 
 }
+
+/*
+*The global context is used to inquery cluster information
+*/
 void __global_disconnect(){
      redisFree(globalContext);
      printf("global context freed\n");
 }
+
+     
+
