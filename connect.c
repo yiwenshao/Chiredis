@@ -258,9 +258,7 @@ void __clusterInfo(){
     redisContext* c = redisConnect("172.16.32.211", 7002);
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
 	printf("%s\n",r->str);
-    char* temp = r->str;
-    char * point;
-    printf("%s\n",strstr(temp,"connected"));
+    __process_cluster_str(r->str);
 
 }
 
