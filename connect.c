@@ -344,7 +344,7 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster){
     char* point;
     int copy_len = 0;
 
-    while((point=strchr(temp,'\n'))!=NULL){
+    while((point=strchr(temp,'\b'))!=NULL){
         copy_len = point-temp+1;
         argv[count] = (char*)malloc(copy_len);
         strncpy(argv[count],temp,copy_len - 1);
