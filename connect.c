@@ -228,7 +228,7 @@ int get(const char *key, char *value)
 		return -1;
 	}
 }
-
+/*
 void __process_cluster_str(char* str){
     char *temp = str;
     char * argv[50];
@@ -251,20 +251,118 @@ void __process_cluster_str(char* str){
         puts(argv[i]);
     }
 }
-
+*/
 void __clusterInfo(){
-    char *argv[20];
-    int count = 0;
     redisContext* c = redisConnect("172.16.32.211", 7002);
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
-	printf("%s\n",r->str);
-    __process_cluster_str(r->str);
-
+	printf("the raw return value = %s\n",r->str);
+    clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
+    from_str_to_cluster(r->str,mycluster);
+    process_cluterInfo(mycluster);
+    print_clusterInfo_parsed(mycluster);
 }
 
+void process_cluterInfo(clusterInfo* mycluster){
+    //determine the time of iteration
+    int len = mycluster->len;
 
+    printf("len = %d\n",mycluster->len);
+    int len_ip=0;
+    int len_port=0;
+    char* temp;
+    char* ip_start, *port_start, *port_end,*connect_start,*slot_start,*slot_end;
 
+    char* temp_slot_start;
+    char* temp_port;
 
+    int i=0;
+    for(;i<len;i++){
+        temp = ip_start = port_start = port_end = connect_start = slot_start = slot_end = temp_slot_start = temp_port = NULL;
+
+        temp = mycluster->argv[i];
+        //puts(mycluster->argv[i]);
+
+        //parse ip
+        ip_start = strchr(temp,' ');
+        temp = ip_start+1;
+        port_start = strchr(temp,':');
+        temp = port_start+1;
+        port_end = strchr(temp,' ');
+        ip_start++;
+        len_ip = port_start - ip_start;
+        mycluster->parse[i] = (parseArgv*)malloc(sizeof(parseArgv));//do not forget
+        mycluster->parse[i]->ip = (char*)malloc(len_ip + 1);
+
+        strncpy(mycluster->parse[i]->ip,ip_start,len_ip);
+        mycluster->parse[i]->ip[len_ip]='\0';
+
+        //puts(mycluster->parse[i]->ip);
+        //parsePort
+        port_start++;
+        len_port = port_end - port_start;
+        temp_port = (char*)malloc(len_port+1);
+        strncpy(temp_port,port_start,len_port);
+        temp_port[len_port]='\0';
+        mycluster->parse[i]->port = atoi(temp_port);
+
+        connect_start = strstr(port_end,"connected");
+        connect_start = strchr(connect_start,' ');
+
+        slot_start = connect_start+1;
+        slot_end = strchr(slot_start,'-');
+        slot_end++;
+        //puts(connect_start+1);
+
+        temp_slot_start = (char*)malloc(slot_end-slot_start);
+        strncpy(temp_slot_start,slot_start,slot_end-slot_start-1);
+        temp_slot_start[slot_end-slot_start-1]='\0';
+
+        mycluster->parse[i]->start_slot = atoi(temp_slot_start);
+        mycluster->parse[i]->end_slot = atoi(slot_end);
+
+        free(temp_slot_start);
+
+    }
+    //printf("\n%d\n",mycluster->parse[0]->end_slot);
+  
+}
+void print_clusterInfo_parsed(clusterInfo* mycluster){
+    int len = mycluster->len;
+    int i;
+    for(i=0;i<len;i++){
+        printf("node %d info\n",i);
+        printf("original command: %s\n",mycluster->argv[i]);
+        printf("ip: %s, port: %d\n",mycluster->parse[i]->ip,mycluster->parse[i]->port);
+        printf("slot_start= %d, slot_end = %d\n",mycluster->parse[i]->start_slot,\
+	             mycluster->parse[i]->end_slot);
+    }
+}
+
+void from_str_to_cluster(char * temp, clusterInfo* mycluster){
+    char * argv[50];
+    int count = 0;
+    char* point;
+    int copy_len = 0;
+
+    while((point=strchr(temp,'\n'))!=NULL){
+        copy_len = point-temp+1;
+        argv[count] = (char*)malloc(copy_len);
+        strncpy(argv[count],temp,copy_len - 1);
+        argv[count][copy_len-1] = '\0';
+        count++;
+        temp = point+1;
+    }
+    argv[count] = temp;
+    int i;
+    for(i=0;i<=count;i++){
+        //puts(argv[i]);
+    }
+
+    for(i = 0;i<=count;i++){
+        mycluster->argv[i] = argv[i];
+    }
+    mycluster->len = count+1;
+}
 
 
 

@@ -38,6 +38,8 @@ typedef struct parseArgv{
     char * ip;
     redisContext * context;
     int port;
+    int start_slot;
+    int end_slot;
     char slots[16384];
 }parseArgv;
 
@@ -51,7 +53,10 @@ typedef struct clusterInfo{
 void __process_cluster_str(char* str);
 void __clusterInfo();
 
+void print_clusterInfo_parsed(clusterInfo* mycluster);
+void process_cluterInfo(clusterInfo* mycluster);
 
+void from_str_to_cluster(char * temp, clusterInfo* mycluster);
 
 //redisContext *userDeviceDB[MAX_CONCURRENCY];
 //redisContext *userKeyDB[MAX_CONCURRENCY];
