@@ -33,7 +33,8 @@ typedef struct ipContext{
 }ipContext;
 ipContext global[3];
 
-
+void __process_cluster_str(char* str);
+void __clusterInfo();
 //redisContext *userDeviceDB[MAX_CONCURRENCY];
 //redisContext *userKeyDB[MAX_CONCURRENCY];
 //redisContext *deviceStateDB[MAX_CONCURRENCY];

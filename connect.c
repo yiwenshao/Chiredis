@@ -228,3 +228,29 @@ int get(const char *key, char *value)
 		return -1;
 	}
 }
+
+void __process_cluster_str(char* str){
+	puts(str); 
+
+}
+
+void __clusterInfo(){
+    char *argv[20];
+    int count = 0;
+    redisContext* c = redisConnect("172.16.32.211", 7002);
+    redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
+	printf("%s\n",r->str);
+    char* temp = r->str;
+    char * point;
+    
+    
+    printf("%s\n",strstr(temp,"connected"));
+
+}
+
+
+
+
+
+
+
