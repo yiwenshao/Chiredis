@@ -143,7 +143,7 @@ clusterInfo* __clusterInfo(){
     globalCluster = mycluster;
     from_str_to_cluster(r->str,mycluster);
     process_cluterInfo(mycluster);
-    print_clusterInfo_parsed(mycluster);
+    //print_clusterInfo_parsed(mycluster);
     assign_slot(mycluster);
     __test_slot(mycluster);
     __add_context_to_cluster(mycluster);
