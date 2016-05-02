@@ -23,9 +23,6 @@ int main(){
   printf("get key4: %s\n",value);
 */
   clusterInfo* cif =   __clusterInfo(); 
-  assign_slot(cif);
-  __test_slot(cif);
-
 
   disconnectDatabase();
   return 0;

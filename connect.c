@@ -171,8 +171,12 @@ int get(const char *key, char *value)
 	}
 }
 
+/*
+*This function uses the globle context to send cluster nodes command, and build a clusterInfo
+*based on the string returned. It does this by calling functions from_str_to_cluster,
+*process_clusterInfo,and addign_slot;
+*/
 clusterInfo* __clusterInfo(){
-    //redisContext* c = redisConnect("172.16.32.211", 7002);
     redisContext *c = globalContext;
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
 	printf("the raw return value = %s\n",r->str);
@@ -181,10 +185,16 @@ clusterInfo* __clusterInfo(){
     from_str_to_cluster(r->str,mycluster);
     process_cluterInfo(mycluster);
     print_clusterInfo_parsed(mycluster);
+    assign_slot(mycluster);
+    __test_slot(mycluster);
+    __add_context_to_cluster(mycluster);
     return mycluster;
 }
-
-
+/*
+*this function should be called after from_str_to_cluster.It parses the string for each node,and 
+*store the information in mycluster->parse[i]. the parse fild are pointers to  parseArgv struct,each
+*node in the cluster has exactly one such struct, which contains infomation such as ip,port,slot,context..
+*/
 void process_cluterInfo(clusterInfo* mycluster){
     //determine the time of iteration
     int len = mycluster->len;
@@ -243,7 +253,9 @@ void process_cluterInfo(clusterInfo* mycluster){
         free(temp_slot_start);
     }
 }
-
+/*
+*print all the information about the cluster fro debuging.
+*/
 void print_clusterInfo_parsed(clusterInfo* mycluster){
     int len = mycluster->len;
     int i;
@@ -255,7 +267,11 @@ void print_clusterInfo_parsed(clusterInfo* mycluster){
 	             mycluster->parse[i]->end_slot);
     }
 }
-
+/*
+*command cluster nodes will return a str, which fall into n parts, one for each node in the 
+*cluster. this function add the strs to argv in clusterInfo struct, and set mycluster->len, which
+*is the number of nodes in the cluster.
+*/
 void from_str_to_cluster(char * temp, clusterInfo* mycluster){
     char * argv[50];
     int count = 0;
@@ -339,7 +355,7 @@ void __remove_context_from_cluster(clusterInfo* mycluster){
 
 void disconnectDatabase(){
     __global_disconnect();
-
+    __remove_context_from_cluster(globalCluster);
 }
 
 /*
