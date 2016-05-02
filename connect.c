@@ -231,11 +231,11 @@ int get(const char *key, char *value)
 }
 
 clusterInfo* __clusterInfo(){
-    //redisContext* c = redisConnect("172.16.32.211", 7002);
-    //redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
-//	printf("the raw return value = %s\n",r->str);
+    redisContext* c = redisConnect("172.16.32.211", 7002);
+    redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
+	printf("the raw return value = %s\n",r->str);
     clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
-    from_str_to_cluster(testString,mycluster);
+    from_str_to_cluster(r->str,mycluster);
     process_cluterInfo(mycluster);
     print_clusterInfo_parsed(mycluster);
     return mycluster;

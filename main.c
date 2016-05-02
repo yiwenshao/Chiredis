@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include"connect.h"
 int main(){
-//  connectRedis();
+  connectRedis();
 /*  char* value = (char*)malloc(1024*8);
   set("key1","test1");
   set("key2","test2");
@@ -27,6 +27,6 @@ int main(){
   __test_slot(cif);
 
 
-//  disconnectDatabase();
+  disconnectDatabase();
   return 0;
 }
