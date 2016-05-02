@@ -21,10 +21,10 @@
 
 #define MAX_CONCURRENCY 3
 
-void connectRedis();
+void connectRedis(char*ip,int port);
 void set(const char *key, const char *value);
 int get(const char *key, char *value);
-redisContext * currentConnection[MAX_CONCURRENCY];
+redisContext * globalContext;
 
 typedef struct ipContext{
    char ip[16];
@@ -49,6 +49,8 @@ typedef struct clusterInfo{
     void * slot_to_host[16384];
 }clusterInfo;
 
+clusterInfo* globalCluster;
+
 void __process_cluster_str(char* str);
 clusterInfo* __clusterInfo();
 
@@ -59,4 +61,7 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster);
 void __test_slot(clusterInfo* mycluster);
 void assign_slot(clusterInfo* mycluster);
 void __add_context_to_cluster(clusterInfo* mycluster);
+void disconnectDatabase(clusterInfo * mycluster);
+void __global_disconnect(redisContext* context);
+
 #endif

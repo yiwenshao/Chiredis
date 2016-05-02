@@ -6,76 +6,14 @@
 
 //#define DEBUG
 
-void connectRedis(){
-     currentConnection[0] = redisConnect("172.16.32.211",7002);
-	 currentConnection[1] = redisConnect("172.16.32.209",7001);
-     currentConnection[2] = redisConnect("172.16.32.208",7000);
-     strcpy(global[0].ip,"172.16.32.211");
-	 global[0].context = currentConnection[0];
-
-     strcpy(global[1].ip,"172.16.32.209");
-	 global[1].context = currentConnection[1];
-
-     strcpy(global[2].ip,"172.16.32.208");
-	 global[2].context = currentConnection[2];
-
-	 if(currentConnection[0]->err || currentConnection[1]->err||currentConnection[2]->err){
-	     redisFree(currentConnection[0]);
-	     redisFree(currentConnection[1]);
-	     redisFree(currentConnection[2]);
-		 printf("connection refused\n");
+void connectRedis(char* ip, int port){
+     globalContext = redisConnect("172.16.32.211",7002);
+	 if(globalContext->err){
+	     redisFree(globalContext);
+		 printf("global connection refused\n");
 	 }else{
-	     printf("succeed in connecting\n");
+	     printf("succeed in global connecting\n");
 	 }
-}
-
-/*
-void __selectDatabase(redisContext *c, const unsigned int db)
-{
-	redisReply *reply;
-	reply = redisCommand(c, "select %d", db);
-	assert(reply != NULL);
-	freeReplyObject(reply);
-
-	reply = redisCommand(c, "dbsize");
-	assert(reply != NULL);
-	if (reply->type == REDIS_REPLY_INTEGER && reply->integer == 0) {
-		freeReplyObject(reply);
-	} else {
-		printf("Database #%d is not empty, flush.\n", db);
-		reply = redisCommand(c, "FLUSHDB");
-		assert(reply != NULL);
-		freeReplyObject(reply);
-	}
-}
-
-
-void selectDatabase(redisContext *c[], const unsigned int db) 
-{
-	int i;
-	for (i=0; i<MAX_CONCURRENCY; i++) {
-		__selectDatabase(c[i], db);	
-	}
-}
-*/
-
-void  __disconnectDatabase(redisContext *c)
-{
-	//redisReply *reply;
-	//reply = redisCommand(c, "FLUSHDB");
-	//assert(reply != NULL);
-	//freeReplyObject(reply);
-	redisFree(c);
-	printf("connection freed\n");
-}
-
-
-void disconnectDatabase()
-{
-	int i;
-	for (i=0; i<MAX_CONCURRENCY; i++) {
-		__disconnectDatabase(currentConnection[i]);	
-	}
 }
 
 void __set(redisContext *c,  const char *key, const char *value){
@@ -94,7 +32,7 @@ void __set(redisContext *c,  const char *key, const char *value){
 
 void set(const char *key, const char *value)
 {
-	redisContext *c = currentConnection[0];	
+	redisContext *c = globalContext;	
 	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, value);
 	if (r->type == REDIS_REPLY_STRING) {
 
@@ -173,7 +111,7 @@ int __get(redisContext*c, const char *key, char *value){
 
 int get(const char *key, char *value)
 {
-	redisContext * c = currentConnection[0];
+	redisContext * c = globalContext;
 	redisReply *r = (redisReply *)redisCommand(c, "get %s", key);
 #ifdef DEBUG
 	printf("type: %d\n", r->type);
@@ -231,6 +169,7 @@ clusterInfo* __clusterInfo(){
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
 	printf("the raw return value = %s\n",r->str);
     clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
+    globalCluster = mycluster;
     from_str_to_cluster(r->str,mycluster);
     process_cluterInfo(mycluster);
     print_clusterInfo_parsed(mycluster);
@@ -372,5 +311,10 @@ void __add_context_to_cluster(clusterInfo* mycluster){
    }
 }
 
+void disconnectDatabase(clusterInfo* mycluster){
 
-
+}
+void __global_disconnect(redisContext* context){
+     redisFree(context);
+     printf("global context freed\n");
+}
