@@ -6,6 +6,12 @@
 #include <string.h>
 
 #define DEBUG
+/*
+*use the globalContext to connect to the host specified by the user;
+*send cluster nodes command through this context;
+*receive the infomation and create clusterInfo struct,
+*which keep connections to all nodes in the cluster.
+*/
 void connectRedis(char* ip, int port){
      globalContext = redisConnect("172.16.32.211",7002);
 	 if(globalContext->err){
@@ -14,6 +20,7 @@ void connectRedis(char* ip, int port){
 	 }else{
 	     printf("succeed in global connecting\n");
 	 }
+	 __clusterInfo();
 }
 
 /*
@@ -61,6 +68,7 @@ void set(const char *key, const char *value){
 	    return ;
 	}
 	c = tempArgv->context;
+	printf("set start _____________________\n");
 	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, value);
 	if (r->type == REDIS_REPLY_STRING) {
 #ifdef DEBUG
