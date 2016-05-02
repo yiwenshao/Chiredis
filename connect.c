@@ -312,6 +312,7 @@ void __add_context_to_cluster(clusterInfo* mycluster){
 }
 
 void disconnectDatabase(clusterInfo* mycluster){
+     __global_disconnect(globalContext);
 
 }
 void __global_disconnect(redisContext* context){
