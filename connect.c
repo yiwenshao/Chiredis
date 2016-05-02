@@ -319,7 +319,7 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster){
     char* point;
     int copy_len = 0;
 
-    while((point=strchr(temp,'\b'))!=NULL){
+    while((point=strchr(temp,'\n'))!=NULL){
         copy_len = point-temp+1;
         argv[count] = (char*)malloc(copy_len);
         strncpy(argv[count],temp,copy_len - 1);
@@ -329,14 +329,10 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster){
     }
     argv[count] = temp;
     int i;
-    for(i=0;i<=count;i++){
-        //puts(argv[i]);
-    }
-
-    for(i = 0;i<=count;i++){
+    for(i = 0;i<count;i++){
         mycluster->argv[i] = argv[i];
     }
-    mycluster->len = count+1;
+    mycluster->len = count;
 }
 
 void __test_slot(clusterInfo* mycluster){
