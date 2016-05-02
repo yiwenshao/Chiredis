@@ -16,20 +16,6 @@ void connectRedis(char* ip, int port){
 	 }
 }
 
-void __set(redisContext *c,  const char *key, const char *value){
-	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, value);
-	if (r->type == REDIS_REPLY_STATUS) {
-#ifdef DEBUG
-		printf("STATUS = %s\n", r->str);
-#endif
-	}else{
-#ifdef DEBUG
-	   printf("still error %s\n",r->str);
-#endif
-	} 
-	freeReplyObject(r);
-}
-
 /*
 *once we meet indirection, this function help parse the information
 */
@@ -59,7 +45,6 @@ void __set_redirect(char* str){
 	free(s_port);
 }
 
-
 void set(const char *key, const char *value){
 	redisContext *c = globalContext;
 	int myslot;
@@ -68,8 +53,10 @@ void set(const char *key, const char *value){
         parseArgv* tempArgv = ((parseArgv*)(globalCluster->slot_to_host[myslot]));
 	if(tempArgv->slots[myslot]!=1){
 	    printf("slot error in set // connect.c\n");
-	    return;
-	}else if(tempArgv->context == NULL){
+	    //ignore this error currently
+	}
+	if(tempArgv->context == NULL){
+	    //this error can not be ignored
 	    printf("context = NULL in function set\n");
 	    return ;
 	}
@@ -82,7 +69,6 @@ void set(const char *key, const char *value){
 	}else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
 		printf("set still need redirection ? %s\n", r->str);
 		__set_redirect(r->str);
-
 	}else if(r->type == REDIS_REPLY_STATUS){
 #ifdef DEBUG
 		printf("STATUS = %s\n",r->str);
@@ -93,41 +79,22 @@ void set(const char *key, const char *value){
 	freeReplyObject(r);
 }
 
-int __get(redisContext*c, const char *key, char *value){
-	redisReply *r = (redisReply *)redisCommand(c, "get %s", key);
-#ifdef DEBUG
-	printf("type: %d\n", r->type);
-#endif
-	if (r->type == REDIS_REPLY_STRING) {
-#ifdef DEBUG
-
-		printf("%s = %s\n", key, r->str);
-#endif
-		int len = strlen(r->str);
-		strcpy(value, r->str);
-		freeReplyObject(r);
-		return REPLY_SUCCESS;
-	}else if(r->type == REDIS_REPLY_NIL){
-
-		strcpy(value,"nil");
-#ifdef DEBUG
-		printf("value = nil\n");
-		return -1;
-#endif
-	}else{
-	    
-		strcpy(value,"NULL");
-#ifdef DEBUG
-		printf("still error\n");
-#endif
-		return -1;
-	}
-}
-
-
 int get(const char *key, char *value){
-
 	redisContext * c = globalContext;
+	int myslot;
+	myslot = crc16(key,strlen(key)) & 16383;
+	printf("slot calculated= %d\n",myslot);
+        parseArgv* tempArgv = ((parseArgv*)(globalCluster->slot_to_host[myslot]));
+	if(tempArgv->slots[myslot]!=1){
+	    printf("slot error in set // connect.c\n");
+	    //ignore this error currently
+	}
+	if(tempArgv->context == NULL){
+	    //this error can not be ignored
+	    printf("context = NULL in function set\n");
+	    return -1;
+	}
+	c = tempArgv->context;
 	redisReply *r = (redisReply *)redisCommand(c, "get %s", key);
 #ifdef DEBUG
 	printf("type: %d\n", r->type);
@@ -145,37 +112,12 @@ int get(const char *key, char *value){
 		freeReplyObject(r);
 		return REPLY_NULL;
 	} else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
+		freeReplyObject(r);
 #ifdef DEBUG
-		printf("get need redirection  %s\n",r->str);
+		printf("get still need redirection  %s\n",r->str);
 #endif
-        char *s,*p;
-		s = strchr(r->str,' ');
-		s++;
-		p = strchr(s,' ');
-		p++;
-		s = strchr(p,':');
-		s++;
-		char newIp[s-p+1];
-		strncpy(newIp,p,s-p-1);
-#ifdef DEBUG
-		puts(newIp);
-#endif
-		int iter;
-		int returnValue;
-		
-        for(iter=0;iter<3;iter++){
-		       if(!strcmp(newIp,global[iter].ip)){
-				   c = global[iter].context;
-				 //  printf("get find\n");
-				   returnValue = __get(c,key,value);
-				   break;
-			   }else{
-			       //printf("get iter=%d not found new ip =%s  cur=%s\n",iter,newIp,global[iter].ip);
-			   }
-		} 
-	    freeReplyObject(r);
-	    return REPLY_ERROR;
 	} else {
+		printf("unknowd type return get\n");
 		return -1;
 	}
 }
@@ -323,7 +265,9 @@ void assign_slot(clusterInfo* mycluster){
 	if(sizeof(mycluster->parse[i]->slots)!=16384){
 	     printf("slot != 16384 in assign_slot\n");
 	     return;
-	} memset(mycluster->parse[i]->slots,0,16384);
+	} 
+	memset(mycluster->parse[i]->slots,0,16384);
+
         for(j=start;j<=end;j++){
             mycluster->slot_to_host[j] = (void*)(mycluster->parse[i]);
             count++;
@@ -348,7 +292,7 @@ void __add_context_to_cluster(clusterInfo* mycluster){
 	  redisFree(tempContext);
 	  return;
        }else{
-          (mycluster->parse[i])->context;
+          (mycluster->parse[i])->context = tempContext;
        }
    }
    printf("%d connections established!!\n",len);
