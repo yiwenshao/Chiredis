@@ -38,11 +38,14 @@ void __clusterInfo(){
     redisContext* c = redisConnect("172.16.32.211", 7002);
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
 	printf("%s\n",r->str);
+    char * temp = r->str; 
+    printf("%s\n",strstr(temp,"connected"));
+
 }
 
 int main(){
-    //set("wang zhuang","this is wang zhuang test");
-    //get("wang zhuang");
+    
+    
 	__clusterInfo();
 	return 0;
 }
