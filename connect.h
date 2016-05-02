@@ -65,4 +65,6 @@ void __remove_context_from_cluster(clusterInfo* mycluster);
 void disconnectDatabase();
 void __global_disconnect();
 
+void __set_redirect(char* str);
+
 #endif

@@ -4,7 +4,7 @@
 #include <errno.h>
 
 
-//#define DEBUG
+#define DEBUG
 void connectRedis(char* ip, int port){
      globalContext = redisConnect("172.16.32.211",7002);
 	 if(globalContext->err){
@@ -29,43 +29,40 @@ void __set(redisContext *c,  const char *key, const char *value){
 	freeReplyObject(r);
 }
 
-void set(const char *key, const char *value)
-{
+/*
+*
+*/
+void __set_redirect(char* str){
+	char *slot,*ip,*port;
+	slot = strchr(str,' ');
+	slot++;
+	ip = strchr(slot,' ');
+	ip++;
+	port = strchr(ip,':');
+	port++;
+	printf("get new ip = %s slot=%s port =%s\n",ip,slot,port);
+}
+void set(const char *key, const char *value){
+
 	redisContext *c = globalContext;	
 	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, value);
 	if (r->type == REDIS_REPLY_STRING) {
-
 #ifdef DEBUG
 		printf("value = %s\n", r->str);
 #endif
 	}else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
-#ifdef DEBUG
 		printf("set need redirection %s\n", r->str);
-#endif
-        	char *s,*p;
-		s = strchr(r->str,' ');
-		s++;
-		p = strchr(s,' ');
-		p++;
-		s = strchr(p,':');
-		s++;
-		char newIp[s-p+3];
-		strncpy(newIp,p,s-p-1);
-#ifdef DEBUG
-		printf("get new ip = %s len = %d\n",newIp,strlen(newIp));
-#endif
+		__set_redirect(r->str);
+
 	}else if(r->type == REDIS_REPLY_STATUS){
 #ifdef DEBUG
 		printf("STATUS = %s\n",r->str);
 #endif
 	}else{
 	   printf("set error\n");
-	
 	}
 	freeReplyObject(r);
 }
-
-
 
 int __get(redisContext*c, const char *key, char *value){
 	redisReply *r = (redisReply *)redisCommand(c, "get %s", key);
