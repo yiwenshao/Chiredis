@@ -65,14 +65,22 @@ void set(const char *key, const char *value){
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
 	printf("slot calculated= %d\n",myslot);
-
+        parseArgv* tempArgv = ((parseArgv*)(globalCluster->slot_to_host[myslot]));
+	if(tempArgv->slots[myslot]!=1){
+	    printf("slot error in set // connect.c\n");
+	    return;
+	}else if(tempArgv->context == NULL){
+	    printf("context = NULL in function set\n");
+	    return ;
+	}
+	c = tempArgv->context;
 	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, value);
 	if (r->type == REDIS_REPLY_STRING) {
 #ifdef DEBUG
 		printf("value = %s\n", r->str);
 #endif
 	}else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
-		printf("set need redirection %s\n", r->str);
+		printf("set still need redirection ? %s\n", r->str);
 		__set_redirect(r->str);
 
 	}else if(r->type == REDIS_REPLY_STATUS){
@@ -117,8 +125,8 @@ int __get(redisContext*c, const char *key, char *value){
 }
 
 
-int get(const char *key, char *value)
-{
+int get(const char *key, char *value){
+
 	redisContext * c = globalContext;
 	redisReply *r = (redisReply *)redisCommand(c, "get %s", key);
 #ifdef DEBUG
