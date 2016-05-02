@@ -27,14 +27,32 @@ void disconnectDatabase();
 void set(const char *key, const char *value);
 int get(const char *key, char *value);
 redisContext * currentConnection[MAX_CONCURRENCY];
+
 typedef struct ipContext{
    char ip[16];
    redisContext * context;
 }ipContext;
 ipContext global[3];
 
+typedef struct parseArgv{
+    char * ip;
+    redisContext * context;
+    int port;
+    char slots[16384];
+}parseArgv;
+
+typedef struct clusterInfo{
+    int len;
+    char * argv[50];
+    parseArgv* parse[50];
+    void * slot_to_host[16384];
+}clusterInfo;
+
 void __process_cluster_str(char* str);
 void __clusterInfo();
+
+
+
 //redisContext *userDeviceDB[MAX_CONCURRENCY];
 //redisContext *userKeyDB[MAX_CONCURRENCY];
 //redisContext *deviceStateDB[MAX_CONCURRENCY];
@@ -42,6 +60,10 @@ void __clusterInfo();
 //unsigned int userDeviceCounter;
 //unsigned int userKeyCounter;
 //unsigned int deviceStateCounter;
+
+
+
+
 
 
 #endif
