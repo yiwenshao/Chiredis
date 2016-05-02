@@ -2,7 +2,7 @@
 #include"connect.h"
 int main(){
   connectRedis();
-  char* value = (char*)malloc(1024*8);
+/*  char* value = (char*)malloc(1024*8);
   set("key1","test1");
   set("key2","test2");
   set("key3","test3");
@@ -21,7 +21,8 @@ int main(){
 
   get("key4",value);
   printf("get key4: %s\n",value);
-
+*/
+  __clusterInfo(); 
 
 
   disconnectDatabase();

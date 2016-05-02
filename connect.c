@@ -242,8 +242,6 @@ void __clusterInfo(){
 	printf("%s\n",r->str);
     char* temp = r->str;
     char * point;
-    
-    
     printf("%s\n",strstr(temp,"connected"));
 
 }
