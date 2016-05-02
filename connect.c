@@ -58,8 +58,9 @@ void __set_redirect(char* str){
 	free(s_slot);
 	free(s_port);
 }
-void set(const char *key, const char *value){
 
+
+void set(const char *key, const char *value){
 	redisContext *c = globalContext;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
@@ -311,9 +312,14 @@ void assign_slot(clusterInfo* mycluster){
         int start = mycluster->parse[i]->start_slot;
         int end = mycluster->parse[i]->end_slot;
         int j=0;
+	if(sizeof(mycluster->parse[i]->slots)!=16384){
+	     printf("slot != 16384 in assign_slot\n");
+	     return;
+	} memset(mycluster->parse[i]->slots,0,16384);
         for(j=start;j<=end;j++){
             mycluster->slot_to_host[j] = (void*)(mycluster->parse[i]);
             count++;
+	    mycluster->parse[i]->slots[i]=1;
         }
     }
     printf("count = %d \n",count);
