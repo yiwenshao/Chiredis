@@ -165,7 +165,8 @@ int get(const char *key, char *value)
 }
 
 clusterInfo* __clusterInfo(){
-    redisContext* c = redisConnect("172.16.32.211", 7002);
+    //redisContext* c = redisConnect("172.16.32.211", 7002);
+    redisContext *c = globalContext;
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
 	printf("the raw return value = %s\n",r->str);
     clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
