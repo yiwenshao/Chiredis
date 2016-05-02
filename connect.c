@@ -36,36 +36,24 @@ void set(const char *key, const char *value)
 	if (r->type == REDIS_REPLY_STRING) {
 
 #ifdef DEBUG
-		//printf("value = %s\n", r->str);
+		printf("value = %s\n", r->str);
 #endif
 	}else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
 #ifdef DEBUG
 		printf("set need redirection %s\n", r->str);
 #endif
-        char *s,*p;
+        	char *s,*p;
 		s = strchr(r->str,' ');
 		s++;
 		p = strchr(s,' ');
 		p++;
 		s = strchr(p,':');
 		s++;
-		//printf("port = %s  p = %s\n",s,p);
 		char newIp[s-p+3];
 		strncpy(newIp,p,s-p-1);
 #ifdef DEBUG
 		printf("get new ip = %s len = %d\n",newIp,strlen(newIp));
 #endif
-		int iter;
-        for(iter=0;iter<3;iter++){
-		       if(!strcmp(global[iter].ip,newIp)){
-				   c = global[iter].context;
-				   __set(c,key,value);
-				   break;
-			   }else{
-			       // printf("get iter=%d not found new ip =%s len=%d  cur=%s\n",iter,newIp,strlen(newIp),global[iter].ip); 
-			   }
-		}
-
 	}else if(r->type == REDIS_REPLY_STATUS){
 #ifdef DEBUG
 		printf("STATUS = %s\n",r->str);
