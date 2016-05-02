@@ -8,6 +8,7 @@
 
 //char *database_ip = "172.16.32.207";
 //int port = 6379;
+char * testString = "e285973c689955349894796b06a40843aef6dbc3 172.16.32.208:7000 master - 0 1462152834978 2 connected 10923-16383\bdea1508f48316c531355ec5fb20b20c0cfd35821 172.16.32.209:7001 master - 0 1462152835980 3 connected 5461-10922\b2f98907f9a0e5aead0cb65816084fe1d4caf4a5f 172.16.32.211:7002 myself,master - 0 0 1 connected 0-5460";
 
 void connectRedis(){
      currentConnection[0] = redisConnect("172.16.32.211",7002);
@@ -229,14 +230,15 @@ int get(const char *key, char *value)
 	}
 }
 
-void __clusterInfo(){
-    redisContext* c = redisConnect("172.16.32.211", 7002);
-    redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
-	printf("the raw return value = %s\n",r->str);
+clusterInfo* __clusterInfo(){
+    //redisContext* c = redisConnect("172.16.32.211", 7002);
+    //redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
+//	printf("the raw return value = %s\n",r->str);
     clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
-    from_str_to_cluster(r->str,mycluster);
+    from_str_to_cluster(testString,mycluster);
     process_cluterInfo(mycluster);
     print_clusterInfo_parsed(mycluster);
+    return mycluster;
 }
 
 void process_cluterInfo(clusterInfo* mycluster){

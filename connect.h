@@ -51,7 +51,7 @@ typedef struct clusterInfo{
 }clusterInfo;
 
 void __process_cluster_str(char* str);
-void __clusterInfo();
+clusterInfo* __clusterInfo();
 
 void print_clusterInfo_parsed(clusterInfo* mycluster);
 void process_cluterInfo(clusterInfo* mycluster);
