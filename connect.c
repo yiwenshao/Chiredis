@@ -230,8 +230,26 @@ int get(const char *key, char *value)
 }
 
 void __process_cluster_str(char* str){
-	puts(str); 
+    char *temp = str;
+    char * argv[50];
+    int count = 0;
+    char* point;
+    int copy_len = 0;
 
+    while((point=strchr(temp,'\n'))!=NULL){
+	    copy_len = point-temp+1;
+	    argv[count] = (char*)malloc(copy_len);
+	    strncpy(argv[count],temp,copy_len - 1);
+	    argv[count][copy_len-1] = '\0';
+	    count++;
+	    temp = point+1;
+	}
+
+	argv[count] = temp;
+    int i;
+    for(i=0;i<=count;i++){
+        puts(argv[i]);
+    }
 }
 
 void __clusterInfo(){
