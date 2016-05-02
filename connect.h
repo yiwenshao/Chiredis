@@ -61,7 +61,7 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster);
 void __test_slot(clusterInfo* mycluster);
 void assign_slot(clusterInfo* mycluster);
 void __add_context_to_cluster(clusterInfo* mycluster);
-void disconnectDatabase(clusterInfo * mycluster);
-void __global_disconnect(redisContext* context);
+void disconnectDatabase();
+void __global_disconnect();
 
 #endif

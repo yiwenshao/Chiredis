@@ -27,6 +27,6 @@ int main(){
   __test_slot(cif);
 
 
-  //disconnectDatabase();
+  disconnectDatabase();
   return 0;
 }

@@ -311,11 +311,11 @@ void __add_context_to_cluster(clusterInfo* mycluster){
    }
 }
 
-void disconnectDatabase(clusterInfo* mycluster){
-     __global_disconnect(globalContext);
+void disconnectDatabase(){
+    __global_disconnect();
 
 }
-void __global_disconnect(redisContext* context){
-     redisFree(context);
+void __global_disconnect(){
+     redisFree(globalContext);
      printf("global context freed\n");
 }
