@@ -22,8 +22,6 @@
 #define MAX_CONCURRENCY 3
 
 void connectRedis();
-//void selectDatabase(redisContext *c[], const unsigned int db);
-void disconnectDatabase();
 void set(const char *key, const char *value);
 int get(const char *key, char *value);
 redisContext * currentConnection[MAX_CONCURRENCY];
@@ -32,6 +30,7 @@ typedef struct ipContext{
    char ip[16];
    redisContext * context;
 }ipContext;
+
 ipContext global[3];
 
 typedef struct parseArgv{
@@ -59,17 +58,5 @@ void process_cluterInfo(clusterInfo* mycluster);
 void from_str_to_cluster(char * temp, clusterInfo* mycluster);
 void __test_slot(clusterInfo* mycluster);
 void assign_slot(clusterInfo* mycluster);
-//redisContext *userDeviceDB[MAX_CONCURRENCY];
-//redisContext *userKeyDB[MAX_CONCURRENCY];
-//redisContext *deviceStateDB[MAX_CONCURRENCY];
-
-//unsigned int userDeviceCounter;
-//unsigned int userKeyCounter;
-//unsigned int deviceStateCounter;
-
-
-
-
-
-
+void __add_context_to_cluster(clusterInfo* mycluster);
 #endif

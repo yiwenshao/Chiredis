@@ -6,10 +6,6 @@
 
 //#define DEBUG
 
-//char *database_ip = "172.16.32.207";
-//int port = 6379;
-char * testString = "e285973c689955349894796b06a40843aef6dbc3 172.16.32.208:7000 master - 0 1462152834978 2 connected 10923-16383\bdea1508f48316c531355ec5fb20b20c0cfd35821 172.16.32.209:7001 master - 0 1462152835980 3 connected 5461-10922\b2f98907f9a0e5aead0cb65816084fe1d4caf4a5f 172.16.32.211:7002 myself,master - 0 0 1 connected 0-5460";
-
 void connectRedis(){
      currentConnection[0] = redisConnect("172.16.32.211",7002);
 	 currentConnection[1] = redisConnect("172.16.32.209",7001);
@@ -359,3 +355,22 @@ void assign_slot(clusterInfo* mycluster){
     }
     printf("count = %d \n",count);
 }
+void __add_context_to_cluster(clusterInfo* mycluster){
+   int len = mycluster-> len;
+   int i = 0;
+   redisContext * tempContext;
+   
+   for(i=0;i<len;i++){
+       tempContext = redisConnect((mycluster->parse[i])->ip,(mycluster->parse[i])->port);
+       if(tempContext->err){
+          printf("connection refused in __add_contect_to_cluster\n");
+	  redisFree(tempContext);
+
+       }else{
+          (mycluster->parse[i])->context;
+       }
+   }
+}
+
+
+
