@@ -57,7 +57,8 @@ void print_clusterInfo_parsed(clusterInfo* mycluster);
 void process_cluterInfo(clusterInfo* mycluster);
 
 void from_str_to_cluster(char * temp, clusterInfo* mycluster);
-
+void __test_slot(clusterInfo* mycluster);
+void assign_slot(clusterInfo* mycluster);
 //redisContext *userDeviceDB[MAX_CONCURRENCY];
 //redisContext *userKeyDB[MAX_CONCURRENCY];
 //redisContext *deviceStateDB[MAX_CONCURRENCY];

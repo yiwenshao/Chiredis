@@ -228,30 +228,7 @@ int get(const char *key, char *value)
 		return -1;
 	}
 }
-/*
-void __process_cluster_str(char* str){
-    char *temp = str;
-    char * argv[50];
-    int count = 0;
-    char* point;
-    int copy_len = 0;
 
-    while((point=strchr(temp,'\n'))!=NULL){
-	    copy_len = point-temp+1;
-	    argv[count] = (char*)malloc(copy_len);
-	    strncpy(argv[count],temp,copy_len - 1);
-	    argv[count][copy_len-1] = '\0';
-	    count++;
-	    temp = point+1;
-	}
-
-	argv[count] = temp;
-    int i;
-    for(i=0;i<=count;i++){
-        puts(argv[i]);
-    }
-}
-*/
 void __clusterInfo(){
     redisContext* c = redisConnect("172.16.32.211", 7002);
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
@@ -280,7 +257,6 @@ void process_cluterInfo(clusterInfo* mycluster){
         temp = ip_start = port_start = port_end = connect_start = slot_start = slot_end = temp_slot_start = temp_port = NULL;
 
         temp = mycluster->argv[i];
-        //puts(mycluster->argv[i]);
 
         //parse ip
         ip_start = strchr(temp,' ');
@@ -296,7 +272,6 @@ void process_cluterInfo(clusterInfo* mycluster){
         strncpy(mycluster->parse[i]->ip,ip_start,len_ip);
         mycluster->parse[i]->ip[len_ip]='\0';
 
-        //puts(mycluster->parse[i]->ip);
         //parsePort
         port_start++;
         len_port = port_end - port_start;
@@ -311,7 +286,6 @@ void process_cluterInfo(clusterInfo* mycluster){
         slot_start = connect_start+1;
         slot_end = strchr(slot_start,'-');
         slot_end++;
-        //puts(connect_start+1);
 
         temp_slot_start = (char*)malloc(slot_end-slot_start);
         strncpy(temp_slot_start,slot_start,slot_end-slot_start-1);
@@ -323,7 +297,6 @@ void process_cluterInfo(clusterInfo* mycluster){
         free(temp_slot_start);
 
     }
-    //printf("\n%d\n",mycluster->parse[0]->end_slot);
   
 }
 void print_clusterInfo_parsed(clusterInfo* mycluster){
@@ -364,5 +337,27 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster){
     mycluster->len = count+1;
 }
 
+void __test_slot(clusterInfo* mycluster){
+    int slot[] = {0,5460,5461,10922,10923,16383};
+    int len = sizeof(slot) / sizeof(int);
+    int i=0;
+    for(i=0;i<len;i++){
+        printf("slot = %d info: ip = %s, port = %d.\n",slot[i],((parseArgv*)mycluster->slot_to_host[slot[i]])->ip, ((parseArgv*)mycluster->slot_to_host[slot[i]])->port);
+    }
+}
 
-
+void assign_slot(clusterInfo* mycluster){
+    int len = mycluster->len;
+    int i;
+    int count = 0;
+    for(i=0;i<len;i++){
+        int start = mycluster->parse[i]->start_slot;
+        int end = mycluster->parse[i]->end_slot;
+        int j=0;
+        for(j=start;j<=end;j++){
+            mycluster->slot_to_host[j] = (void*)(mycluster->parse[i]);
+            count++;
+        }
+    }
+    printf("count = %d \n",count);
+}
