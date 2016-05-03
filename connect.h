@@ -1,5 +1,5 @@
-#ifndef REDIS_H
-#define REDIS_H
+#ifndef CONNECT_H
+#define CONNECT_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,19 +7,9 @@
 #include <assert.h>
 #include <hiredis/hiredis.h>
 
-#define USER_DEVICE_DB	1
-#define USER_KEY_DB		2
-#define	DEVICE_STATE_DB	3
-
 #define REPLY_SUCCESS	1
 #define REPLY_NULL		4
 #define REPLY_ERROR		6
-
-#define DEVICE_LEN		20
-#define STATE_LEN		80
-#define KEY_LEN			20
-
-#define MAX_CONCURRENCY 3
 
 void connectRedis(char*ip,int port);
 void set(const char *key, const char *value);
