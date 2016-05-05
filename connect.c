@@ -111,9 +111,8 @@ void __set_nodb(const char* key,const char* value){
 *set method with the db option
 */
 void __set_withdb(const char* key, const char* value, int dbnum){
-    
-
-
+	sprintf(globalKey,"%d\b%s",dbnum,key);
+	__set_nodb(globalKey,value);
 }
 
 void set(const char *key,const char *value){
