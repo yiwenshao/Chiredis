@@ -4,25 +4,23 @@ int main(){
   connectRedis("115.29.113.239",7002);
 
 
-
-  set("mycluster1","dalfdkjslfdjslfdjsal");
-  set("mycluster2","dalfdkjslfdjslfdjsal");
-  set("mycluster3","dalfdkjslfdjslfdjsal");
-  set("mycluster4","dalfdkjslfdjslfdjsal");
+  set("db1","dalfdkjslfdjslfdjsal",1);
+  set("db2","dalfdkjslfdjslfdjsal",1);
+  set("db3","dalfdkjslfdjslfdjsal",1);
+  set("db4","dalfdkjslfdjslfdjsal",1);
   
-  get("mycluster4",value);
+  get("db1",value,1);
   printf("get mycluster4: %s\n",value);
 
-  get("mycluster4",value);
+  get("db2",value,1);
   printf("get mycluster4: %s\n",value);
 
-  get("mycluster4",value);
+  get("db3",value,1);
   printf("get mycluster4: %s\n",value);
 
-
-  get("mycluster4",value);
+  get("db4",value,1);
   printf("get mycluster4: %s\n",value);
-
+  flushDb();
 
   disconnectDatabase();
   return 0;

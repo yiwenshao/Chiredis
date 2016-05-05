@@ -14,9 +14,10 @@
 */
 void __connect_cluster(char* ip, int port){
      value = (char*)malloc(1024*8);
-     globalKey = (char*)malloc(1024);
+     globalSetKey = (char*)malloc(1024);
+     globalGetKey = (char*)malloc(1024);
      
-     if(value == NULL||globalKey==NULL){
+     if(value == NULL||globalSetKey==NULL){
        printf("can not assign global value space, no connection either\n");
        return;
      }
@@ -68,7 +69,6 @@ void __set_redirect(char* str){
 *calculate the slot, find the context, and then send command
 */
 void __set_nodb(const char* key,const char* value){
-
 	redisContext *c = globalContext;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
@@ -111,14 +111,15 @@ void __set_nodb(const char* key,const char* value){
 *set method with the db option
 */
 void __set_withdb(const char* key, const char* value, int dbnum){
-	sprintf(globalKey,"%d\b%s",dbnum,key);
-	__set_nodb(globalKey,value);
+
+	sprintf(globalSetKey,"%d\b%s",dbnum,key);
+	__set_nodb(globalSetKey,value);
 }
 
-void set(const char *key,const char *value){
-	__set_nodb(key,value);
+void set(const char *key,const char *value,int dbnum){
+	//__set_nodb(key,value);
+	__set_withdb(key,value,dbnum);
 }
-
 
 
 
@@ -179,9 +180,17 @@ int __get_nodb(const char* key,char* value){
 		return -1;
 	}
 }
+int __get_withdb(const char* key, char* value,int dbnum){
+	sprintf(globalGetKey,"%d\b%s",dbnum,key);
+	int re = __get_nodb(globalGetKey,value);
+	sprintf(globalGetKey,"%s","");
+	return re;
+}
 
-int get(const char *key, char *value){
-       __get_nodb(key,value);
+
+int get(const char *key, char *value,int dbnum){
+       //__get_nodb(key,value);
+       __get_withdb(key,value,dbnum);
 }
 
 /*
@@ -397,3 +406,24 @@ void __global_disconnect(){
      printf("global context freed\n");
 }
 
+/*
+*Flushdb command. 0 means the command succeed, otherwise fail.
+*/
+int flushDb(){
+    redisContext* c = globalContext;
+    int len = globalCluster->len;
+    int i;
+    for(i=0;i<len;i++){
+       c = globalCluster->parse[i]->context;
+       redisReply *r = (redisReply *)redisCommand(c, "flushdb");
+       if(r->type == REDIS_REPLY_STATUS){
+           printf("flushdb status = %s\n",r->str);
+        }else if(r->type == REDIS_REPLY_STRING){
+           printf("flush db = %s\n",r->str);
+        }else{
+	   break;
+        }
+    }
+    if(i == len) return 0;
+    else return -1;
+}
