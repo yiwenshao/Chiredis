@@ -52,6 +52,6 @@ void __set_redirect(char* str);
 int __get_nodb(const char* key,char* value);
 char* value;
 void __connect_cluster(char* ip, int port);
-
-
+void __set_nodb(const char* key,const char* value);
+void __set_withdb(const char* key, const char* value, int dbnum);
 #endif

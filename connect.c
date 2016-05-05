@@ -63,7 +63,11 @@ void __set_redirect(char* str){
 	free(s_port);
 }
 
-void set(const char *key, const char *value){
+/*
+*
+*
+*/
+void __set_nodb(const char* key,const char* value){
 	redisContext *c = globalContext;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
@@ -97,6 +101,21 @@ void set(const char *key, const char *value){
 	}
 	freeReplyObject(r);
 }
+
+/*
+*set method with the db option
+*/
+void __set_withdb(const char* key, const char* value, int dbnum){
+
+}
+
+void set(const char *key,const char *value){
+	__set_nodb(key,value);
+}
+
+
+
+
 
 /*
 *get method without use db option. here const char* is not compitable with char*
