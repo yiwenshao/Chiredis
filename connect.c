@@ -12,7 +12,14 @@
 *receive the infomation and create clusterInfo struct,
 *which keep connections to all nodes in the cluster.
 */
-void connectRedis(char* ip, int port){
+void __connect_cluster(char* ip, int port){
+
+     value = (char*)malloc(1024*8);
+     if(value == NULL){
+       printf("can not assign global value space, no connection either\n");
+       return;
+     }
+
      globalContext = redisConnect(ip,port);
 	 if(globalContext->err){
 	     redisFree(globalContext);
@@ -21,6 +28,10 @@ void connectRedis(char* ip, int port){
 	     printf("succeed in global connecting\n");
 	 }
 	 __clusterInfo();
+}
+
+void connectRedis(char* ip, int port){
+     __connect_cluster(ip,port);
 }
 
 /*
@@ -91,6 +102,11 @@ void set(const char *key, const char *value){
 *get method without use db option. here const char* is not compitable with char*
 */
 int __get_nodb(const char* key,char* value){
+        assert(value != NULL);
+	if(key==NULL){
+	   strcpy(value,"key is NULL");
+	   return -1;
+	}
 
 	redisContext * c = globalContext;
 	int myslot;
@@ -98,12 +114,15 @@ int __get_nodb(const char* key,char* value){
 	printf("slot calculated= %d\n",myslot);
         parseArgv* tempArgv = ((parseArgv*)(globalCluster->slot_to_host[myslot]));
 	if(tempArgv->slots[myslot]!=1){
+#ifdef DEBUG
 	    printf("slot error in set // connect.c\n");
-	    //ignore this error currently
+#endif
+            //ignore this error currently
 	}
 	if(tempArgv->context == NULL){
 	    //this error can not be ignored
 	    printf("context = NULL in function set\n");
+	    strcpy(value,"conext ==NULL");
 	    return -1;
 	}
 	c = tempArgv->context;
@@ -118,16 +137,18 @@ int __get_nodb(const char* key,char* value){
 		int len = strlen(r->str);
 		strcpy(value, r->str);
 		freeReplyObject(r);
-		return REPLY_SUCCESS;
+		return 0;
 	}else if (r->type == REDIS_REPLY_NIL) {
 		strcpy(value,"nil");
 		freeReplyObject(r);
-		return REPLY_NULL;
+		return 0;
 	} else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
 		freeReplyObject(r);
 #ifdef DEBUG
 		printf("get still need redirection  %s\n",r->str);
 #endif
+		strcpy(value,"redirection");
+		return -1;
 	} else {
 		printf("unknowd type return get\n");
 		return -1;
