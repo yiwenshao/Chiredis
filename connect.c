@@ -13,9 +13,10 @@
 *which keep connections to all nodes in the cluster.
 */
 void __connect_cluster(char* ip, int port){
-
      value = (char*)malloc(1024*8);
-     if(value == NULL){
+     globalKey = (char*)malloc(1024);
+     
+     if(value == NULL||globalKey==NULL){
        printf("can not assign global value space, no connection either\n");
        return;
      }
@@ -64,10 +65,10 @@ void __set_redirect(char* str){
 }
 
 /*
-*
-*
+*calculate the slot, find the context, and then send command
 */
 void __set_nodb(const char* key,const char* value){
+
 	redisContext *c = globalContext;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
@@ -83,9 +84,13 @@ void __set_nodb(const char* key,const char* value){
 	    return ;
 	}
 	c = tempArgv->context;
+
+
 	printf("set start _____________________\n");
 	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, value);
+
 	if (r->type == REDIS_REPLY_STRING) {
+
 #ifdef DEBUG
 		printf("value = %s\n", r->str);
 #endif
@@ -106,6 +111,8 @@ void __set_nodb(const char* key,const char* value){
 *set method with the db option
 */
 void __set_withdb(const char* key, const char* value, int dbnum){
+    
+
 
 }
 
