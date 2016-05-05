@@ -49,4 +49,8 @@ void disconnectDatabase();
 void __global_disconnect();
 
 void __set_redirect(char* str);
+int __get_nodb(const char* key,char* value);
+
+
+
 #endif

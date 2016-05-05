@@ -24,7 +24,7 @@ void connectRedis(char* ip, int port){
 }
 
 /*
-*once we meet indirection, this function help parse the information
+*once we meet indirection, this function help parse the information returned
 */
 void __set_redirect(char* str){
 	char *slot,*ip,*port;
@@ -87,7 +87,11 @@ void set(const char *key, const char *value){
 	freeReplyObject(r);
 }
 
-int get(const char *key, char *value){
+/*
+*get method without use db option. here const char* is not compitable with char*
+*/
+int __get_nodb(const char* key,char* value){
+
 	redisContext * c = globalContext;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
@@ -130,6 +134,10 @@ int get(const char *key, char *value){
 	}
 }
 
+int get(const char *key, char *value){
+       __get_nodb(key,value);
+}
+
 /*
 *This function uses the globle context to send cluster nodes command, and build a clusterInfo
 *based on the string returned. It does this by calling functions from_str_to_cluster,
@@ -149,6 +157,7 @@ clusterInfo* __clusterInfo(){
     __add_context_to_cluster(mycluster);
     return mycluster;
 }
+
 /*
 *this function should be called after from_str_to_cluster.It parses the string for each node,and 
 *store the information in mycluster->parse[i]. the parse fild are pointers to  parseArgv struct,each
@@ -226,6 +235,7 @@ void print_clusterInfo_parsed(clusterInfo* mycluster){
 	             mycluster->parse[i]->end_slot);
     }
 }
+
 /*
 *command cluster nodes will return a str, which fall into n parts, one for each node in the 
 *cluster. this function add the strs to argv in clusterInfo struct, and set mycluster->len, which
@@ -248,7 +258,6 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster){
 	     printf("meet slave");
 	     continue;
 	}
-
         argv[count][copy_len-1] = '\0';
         count++;
         temp = point+1;
@@ -269,6 +278,7 @@ void __test_slot(clusterInfo* mycluster){
         printf("slot = %d info: ip = %s, port = %d.\n",slot[i],((parseArgv*)mycluster->slot_to_host[slot[i]])->ip, ((parseArgv*)mycluster->slot_to_host[slot[i]])->port);
     }
 }
+
 
 void assign_slot(clusterInfo* mycluster){
     int len = mycluster->len;
@@ -340,6 +350,4 @@ void __global_disconnect(){
      redisFree(globalContext);
      printf("global context freed\n");
 }
-
-     
 
