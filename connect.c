@@ -13,7 +13,7 @@
 *which keep connections to all nodes in the cluster.
 */
 void connectRedis(char* ip, int port){
-     globalContext = redisConnect("172.16.32.211",7002);
+     globalContext = redisConnect(ip,port);
 	 if(globalContext->err){
 	     redisFree(globalContext);
 		 printf("global connection refused\n");
@@ -241,6 +241,14 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster){
         copy_len = point-temp+1;
         argv[count] = (char*)malloc(copy_len);
         strncpy(argv[count],temp,copy_len - 1);
+
+	if(strstr(argv[count],"slave")!=NULL){
+	     free(argv[count]);
+	     temp = point+1;
+	     printf("meet slave");
+	     continue;
+	}
+
         argv[count][copy_len-1] = '\0';
         count++;
         temp = point+1;
@@ -297,6 +305,7 @@ void __add_context_to_cluster(clusterInfo* mycluster){
        tempContext = redisConnect((mycluster->parse[i])->ip,(mycluster->parse[i])->port);
        if(tempContext->err){
           printf("connection refused in __add_contect_to_cluster\n");
+	  printf("refuse ip=%s, port=%d",(mycluster->parse[i])->ip,(mycluster->parse[i])->port);
 	  redisFree(tempContext);
 	  return;
        }else{
