@@ -1,27 +1,40 @@
 #include<stdio.h>
 #include"connect.h"
+/*
+*"value" is a char* type global variable which is used to hold value.
+*It can be used in either get or set operation.
+*/
+
 int main(){
-  connectRedis("115.29.113.239",7002);
+  char * ip = "115.29.113.239";
+  int port = 7002;
 
+  connectRedis(ip,port);
 
-  set("db1","dalfdkjslfdjslfdjsal",1);
-  set("db2","dalfdkjslfdjslfdjsal",1);
-  set("db3","dalfdkjslfdjslfdjsal",1);
-  set("db4","dalfdkjslfdjslfdjsal",1);
+  int sum = 0;
+  sum += set("db1","dalfdkjslfdjslfdjsal",1);
+  sum += set("db2","dalfdkjslfdjslfdjsal",1);
+  sum += set("db3","dalfdkjslfdjslfdjsal",1);
+  sum += set("db4","dalfdkjslfdjslfdjsal",1);
   
-  get("db1",value,1);
-  printf("get mycluster4: %s\n",value);
+  sum += get("db1",value,1);
+  printf("get db1: %s\n",value);
 
-  get("db2",value,1);
-  printf("get mycluster4: %s\n",value);
+  sum += get("db2",value,1);
+  printf("get db2: %s\n",value);
 
-  get("db3",value,1);
-  printf("get mycluster4: %s\n",value);
+  sum += get("db3",value,1);
+  printf("get db3: %s\n",value);
 
-  get("db4",value,1);
-  printf("get mycluster4: %s\n",value);
+  sum += get("db4",value,1);
+  printf("get db4: %s\n",value);
+  
+  if(sum == 0)
+     printf("all operations succeed!\n");
+  else printf("operation fail\n");
+
+
   flushDb();
-
   disconnectDatabase();
   return 0;
 }

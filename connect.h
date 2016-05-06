@@ -7,12 +7,8 @@
 #include <assert.h>
 #include <hiredis/hiredis.h>
 
-//#define REPLY_SUCCESS	1
-//#define REPLY_NULL		4
-//#define REPLY_ERROR		6
-
 void connectRedis(char*ip,int port);
-void set(const char *key, const char *value,int dunum);
+int set(const char *key, const char *value,int dunum);
 int get(const char *key, char *value, int dbnum);
 redisContext * globalContext;
 
@@ -54,8 +50,8 @@ char* value;
 char* globalSetKey;
 char* globalGetKey;
 void __connect_cluster(char* ip, int port);
-void __set_nodb(const char* key,const char* value);
-void __set_withdb(const char* key, const char* value, int dbnum);
+int __set_nodb(const char* key,const char* value);
+int __set_withdb(const char* key, const char* value, int dbnum);
 int __get_withdb(const char* key,char* value,int dbnum);
 int flushDb();
 #endif

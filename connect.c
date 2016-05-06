@@ -5,12 +5,14 @@
 #include "crc16.h"
 #include <string.h>
 
-#define DEBUG
+//#define DEBUG
+//#define SUCCESS
+
 /*
 *use the globalContext to connect to the host specified by the user;
 *send cluster nodes command through this context;
 *receive the infomation and create clusterInfo struct,
-*which keep connections to all nodes in the cluster.
+*which keeps connections to all nodes in the cluster.
 */
 void __connect_cluster(char* ip, int port){
      value = (char*)malloc(1024*8);
@@ -26,8 +28,11 @@ void __connect_cluster(char* ip, int port){
 	 if(globalContext->err){
 	     redisFree(globalContext);
 		 printf("global connection refused\n");
+		 return;
 	 }else{
+#ifdef DEBUG	 
 	     printf("succeed in global connecting\n");
+#endif
 	 }
 	 __clusterInfo();
 }
@@ -59,7 +64,9 @@ void __set_redirect(char* str){
 
 	s_port = (char*)malloc(sizeof(port)+1);
 	strcpy(s_port,port);
+#ifdef DEBUG
 	printf("get new ip = %s slot=%s port =%s\n",s_ip,s_slot,s_port);
+#endif
 	free(s_ip);
 	free(s_slot);
 	free(s_port);
@@ -68,41 +75,46 @@ void __set_redirect(char* str){
 /*
 *calculate the slot, find the context, and then send command
 */
-void __set_nodb(const char* key,const char* value){
+int __set_nodb(const char* key,const char* value){
 	redisContext *c = globalContext;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
+#ifdef DEBUG	
 	printf("slot calculated= %d\n",myslot);
+#endif
         parseArgv* tempArgv = ((parseArgv*)(globalCluster->slot_to_host[myslot]));
 	if(tempArgv->slots[myslot]!=1){
+#ifdef DEBUG
 	    printf("slot error in set // connect.c\n");
 	    //ignore this error currently
+#endif
 	}
 	if(tempArgv->context == NULL){
-	    //this error can not be ignored
 	    printf("context = NULL in function set\n");
-	    return ;
+	    return -1;
 	}
 	c = tempArgv->context;
-
-
+#ifdef DEBUG
 	printf("set start _____________________\n");
+#endif
 	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, value);
 
-	if (r->type == REDIS_REPLY_STRING) {
+	if (r->type == REDIS_REPLY_STRING){
 
-#ifdef DEBUG
-		printf("value = %s\n", r->str);
-#endif
+		printf("set should not return str ?value = %s\n", r->str);
+		return 0;
 	}else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
 		printf("set still need redirection ? %s\n", r->str);
 		__set_redirect(r->str);
+		return -1;
 	}else if(r->type == REDIS_REPLY_STATUS){
 #ifdef DEBUG
 		printf("STATUS = %s\n",r->str);
 #endif
+		return 0;
 	}else{
 	   printf("set error\n");
+	   return -1;
 	}
 	freeReplyObject(r);
 }
@@ -110,19 +122,16 @@ void __set_nodb(const char* key,const char* value){
 /*
 *set method with the db option
 */
-void __set_withdb(const char* key, const char* value, int dbnum){
+int __set_withdb(const char* key, const char* value, int dbnum){
 
 	sprintf(globalSetKey,"%d\b%s",dbnum,key);
-	__set_nodb(globalSetKey,value);
+	return __set_nodb(globalSetKey,value);
 }
 
-void set(const char *key,const char *value,int dbnum){
+int set(const char *key,const char *value,int dbnum){
 	//__set_nodb(key,value);
-	__set_withdb(key,value,dbnum);
+	return __set_withdb(key,value,dbnum);
 }
-
-
-
 
 /*
 *get method without use db option. here const char* is not compitable with char*
@@ -137,8 +146,10 @@ int __get_nodb(const char* key,char* value){
 	redisContext * c = globalContext;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
+#ifdef DEBUG
 	printf("slot calculated= %d\n",myslot);
-        parseArgv* tempArgv = ((parseArgv*)(globalCluster->slot_to_host[myslot]));
+#endif
+	parseArgv* tempArgv = ((parseArgv*)(globalCluster->slot_to_host[myslot]));
 	if(tempArgv->slots[myslot]!=1){
 #ifdef DEBUG
 	    printf("slot error in set // connect.c\n");
@@ -190,7 +201,7 @@ int __get_withdb(const char* key, char* value,int dbnum){
 
 int get(const char *key, char *value,int dbnum){
        //__get_nodb(key,value);
-       __get_withdb(key,value,dbnum);
+      return  __get_withdb(key,value,dbnum);
 }
 
 /*
@@ -201,14 +212,20 @@ int get(const char *key, char *value,int dbnum){
 clusterInfo* __clusterInfo(){
     redisContext *c = globalContext;
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
-	printf("the raw return value = %s\n",r->str);
+#ifdef DEBUG
+    printf("the raw return value = %s\n",r->str);
+#endif
     clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
     globalCluster = mycluster;
     from_str_to_cluster(r->str,mycluster);
     process_cluterInfo(mycluster);
-    //print_clusterInfo_parsed(mycluster);
+#ifdef DEBUG
+    print_clusterInfo_parsed(mycluster);
+#endif
     assign_slot(mycluster);
+#ifdef DEBUG
     __test_slot(mycluster);
+#endif
     __add_context_to_cluster(mycluster);
     return mycluster;
 }
@@ -221,8 +238,9 @@ clusterInfo* __clusterInfo(){
 void process_cluterInfo(clusterInfo* mycluster){
     //determine the time of iteration
     int len = mycluster->len;
-
+#ifdef DEBUG
     printf("len = %d\n",mycluster->len);
+#endif
     int len_ip=0;
     int len_port=0;
     char* temp;
@@ -310,7 +328,9 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster){
 	if(strstr(argv[count],"slave")!=NULL){
 	     free(argv[count]);
 	     temp = point+1;
+#ifdef DEBUG
 	     printf("meet slave");
+#endif
 	     continue;
 	}
         argv[count][copy_len-1] = '\0';
@@ -355,7 +375,9 @@ void assign_slot(clusterInfo* mycluster){
 	    mycluster->parse[i]->slots[i]=1;
         }
     }
+#ifdef DEBUG
     printf("count = %d \n",count);
+#endif
 }
 
 /*
@@ -377,7 +399,9 @@ void __add_context_to_cluster(clusterInfo* mycluster){
           (mycluster->parse[i])->context = tempContext;
        }
    }
+#ifdef SUCCESS
    printf("%d connections established!!\n",len);
+#endif
 }
 
 
@@ -389,7 +413,9 @@ void __remove_context_from_cluster(clusterInfo* mycluster){
    for(i=0;i<len;i++){
       redisFree(mycluster->parse[i]->context);
    }
+#ifdef SUCCESS
    printf("%d connections closed!!\n",len);
+#endif 
 }
 
 
@@ -403,7 +429,9 @@ void disconnectDatabase(){
 */
 void __global_disconnect(){
      redisFree(globalContext);
+#ifdef SUCCESS
      printf("global context freed\n");
+#endif
 }
 
 /*
@@ -417,8 +445,10 @@ int flushDb(){
        c = globalCluster->parse[i]->context;
        redisReply *r = (redisReply *)redisCommand(c, "flushdb");
        if(r->type == REDIS_REPLY_STATUS){
+#ifdef SUCCESS
            printf("flushdb status = %s\n",r->str);
-        }else if(r->type == REDIS_REPLY_STRING){
+#endif
+	}else if(r->type == REDIS_REPLY_STRING){
            printf("flush db = %s\n",r->str);
         }else{
 	   break;
