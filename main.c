@@ -8,12 +8,14 @@
 int main(){
   char * ip = "115.29.113.239";
   int port = 7002;
+  /*
+  *each thread has its own value and cluster struct.
+  */
   char*  value = (char*)malloc(1024*8); 
   clusterInfo *cluster = connectRedis(ip,port);
   if(cluster!=NULL)
   	printf("!=null\n");
   else printf("==null\n");
-//  print_clusterInfo_parsed(cluster);
 
   int sum = 0;
   sum += set(cluster,"db1a","rXXXr",1);
