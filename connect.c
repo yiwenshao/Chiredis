@@ -16,8 +16,8 @@
 */
 void __connect_cluster(char* ip, int port){
 
-     globalSetKey = (char*)malloc(1024);
-     globalGetKey = (char*)malloc(1024);
+
+     //globalGetKey = (char*)malloc(1024);
 /*     
      if(value == NULL||globalSetKey==NULL){
        printf("can not assign global value space, no connection either\n");
@@ -123,9 +123,11 @@ int __set_nodb(const char* key,const char* set_in_value){
 *set method with the db option
 */
 int __set_withdb(const char* key, const char* set_in_value, int dbnum){
-
-	sprintf(globalSetKey,"%d\b%s",dbnum,key);
-	return __set_nodb(globalSetKey,set_in_value);
+        char* localSetKey = (char*)malloc(1024);
+	sprintf(localSetKey,"%d\b%s",dbnum,key);
+	int re = __set_nodb(localSetKey,set_in_value);
+        free(localSetKey);   
+	return re;
 }
 
 int set(const char *key,const char *set_in_value,int dbnum){
@@ -192,9 +194,11 @@ int __get_nodb(const char* key,char* get_in_value){
 	}
 }
 int __get_withdb(const char* key, char* get_in_value,int dbnum){
-	sprintf(globalGetKey,"%d\b%s",dbnum,key);
-	int re = __get_nodb(globalGetKey,get_in_value);
-	sprintf(globalGetKey,"%s","");
+	char *localGetKey = (char*)malloc(1024);
+
+	sprintf(localGetKey,"%d\b%s",dbnum,key);
+	int re = __get_nodb(localGetKey,get_in_value);
+	free(localGetKey);
 	return re;
 }
 

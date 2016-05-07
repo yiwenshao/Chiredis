@@ -54,8 +54,8 @@ int __get_withdb(const char* key,char*get_in_value,int dbnum);
 int flushDb();
 
 //char* value;
-char* globalSetKey;
-char* globalGetKey;
+//char* globalSetKey;
+//char* globalGetKey;
 clusterInfo* globalCluster;
 redisContext * globalContext;
 
