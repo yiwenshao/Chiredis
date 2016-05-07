@@ -38,7 +38,7 @@ int main(){
   else printf("operation fail\n");
 
 
-  flushDb();
+  flushDb(cluster);
   disconnectDatabase();
   return 0;
 }

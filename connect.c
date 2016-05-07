@@ -226,7 +226,7 @@ clusterInfo* __clusterInfo(redisContext* localContext){
     printf("the raw return value = %s\n",r->str);
 #endif
     clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
-    globalCluster = mycluster;
+    mycluster->globalContext = localContext;
     from_str_to_cluster(r->str,mycluster);
     process_cluterInfo(mycluster);
 #ifdef DEBUG
@@ -431,7 +431,7 @@ void __remove_context_from_cluster(clusterInfo* mycluster){
 
 void disconnectDatabase(){
     __global_disconnect();
-    __remove_context_from_cluster(globalCluster);
+    //__remove_context_from_cluster(globalCluster);
 }
 
 /*
@@ -447,12 +447,17 @@ void __global_disconnect(){
 /*
 *Flushdb command. 0 means the command succeed, otherwise fail.
 */
-int flushDb(){
+int flushDb(clusterInfo* cluster){
     redisContext *c = NULL;
-    int len = globalCluster->len;
+    if(cluster==NULL){
+    	printf("error flushdb cluster == NULL\n");
+    }
+
+    int len = cluster->len;
     int i;
+
     for(i=0;i<len;i++){
-       c = globalCluster->parse[i]->context;
+       c = cluster->parse[i]->context;
        redisReply *r = (redisReply *)redisCommand(c, "flushdb");
        if(r->type == REDIS_REPLY_STATUS){
 
