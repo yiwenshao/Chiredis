@@ -1,6 +1,6 @@
 obj=main.o connect.o crc16.o
 main: $(obj) 
-	gcc -o main $(obj) -l hiredis
+	gcc -o main $(obj) -l hiredis -lpthread
 main.o: main.c connect.h
 	gcc -c main.c
 connect.o: connect.c connect.h
