@@ -31,9 +31,9 @@ int __set_nodb(clusterInfo* cluster,const char* key,const char* set_in_value);
 int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum);
 
 
-int get(const char *key, char *get_in_value, int dbnum);
-int __get_withdb(const char* key,char*get_in_value,int dbnum);
-int __get_nodb(const char* key,char* get_in_value);
+int get(clusterInfo*cluster, const char *key, char *get_in_value, int dbnum);
+int __get_withdb(clusterInfo*cluster, const char* key,char*get_in_value,int dbnum);
+int __get_nodb(clusterInfo*cluster, const char* key,char* get_in_value);
 
 void __process_cluster_str(char* str);
 clusterInfo* __clusterInfo(redisContext* localContext);

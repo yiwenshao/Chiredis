@@ -144,7 +144,7 @@ int set(clusterInfo* cluster, const char *key,const char *set_in_value,int dbnum
 /*
 *get method without use db option. here const char* is not compitable with char*
 */
-int __get_nodb(const char* key,char* get_in_value){
+int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
         assert(get_in_value != NULL);
 	if(key==NULL){
 	   strcpy(get_in_value,"key is NULL");
@@ -157,7 +157,7 @@ int __get_nodb(const char* key,char* get_in_value){
 #ifdef DEBUG
 	printf("slot calculated= %d\n",myslot);
 #endif
-	parseArgv* tempArgv = ((parseArgv*)(globalCluster->slot_to_host[myslot]));
+	parseArgv* tempArgv = ((parseArgv*)(cluster->slot_to_host[myslot]));
 	if(tempArgv->slots[myslot]!=1){
 #ifdef DEBUG
 	    printf("slot error in set // connect.c\n");
@@ -199,19 +199,19 @@ int __get_nodb(const char* key,char* get_in_value){
 		return -1;
 	}
 }
-int __get_withdb(const char* key, char* get_in_value,int dbnum){
+int __get_withdb(clusterInfo* cluster, const char* key, char* get_in_value,int dbnum){
 	char *localGetKey = (char*)malloc(1024);
 
 	sprintf(localGetKey,"%d\b%s",dbnum,key);
-	int re = __get_nodb(localGetKey,get_in_value);
+	int re = __get_nodb(cluster,localGetKey,get_in_value);
 	free(localGetKey);
 	return re;
 }
 
 
-int get(const char *key, char *get_in_value,int dbnum){
+int get(clusterInfo* cluster, const char *key, char *get_in_value,int dbnum){
        //__get_nodb(key,value);
-      return  __get_withdb(key,get_in_value,dbnum);
+      return  __get_withdb(cluster,key,get_in_value,dbnum);
 }
 
 /*
