@@ -14,7 +14,7 @@
 *receive the infomation and create clusterInfo struct,
 *which keeps connections to all nodes in the cluster.
 */
-void __connect_cluster(char* ip, int port){
+clusterInfo* __connect_cluster(char* ip, int port){
 
 
      //globalGetKey = (char*)malloc(1024);
@@ -24,9 +24,9 @@ void __connect_cluster(char* ip, int port){
        return;
      }
 */
-     globalContext = redisConnect(ip,port);
-	 if(globalContext->err){
-	     redisFree(globalContext);
+     redisContext* localContext = redisConnect(ip,port);
+	 if(localContext->err){
+	     redisFree(localContext);
 		 printf("global connection refused\n");
 		 return;
 	 }else{
@@ -34,10 +34,16 @@ void __connect_cluster(char* ip, int port){
 	     printf("succeed in global connecting\n");
 #endif
 	 }
-	 __clusterInfo();
+	clusterInfo* cluster = __clusterInfo(localContext);
+	if(cluster!=NULL)
+	   return cluster;
+	else{
+	   printf("return error in redisConnect\n");
+	   return NULL;
+	}
 }
 
-void connectRedis(char* ip, int port){
+clusterInfo* connectRedis(char* ip, int port){
      __connect_cluster(ip,port);
 }
 
@@ -76,7 +82,7 @@ void __set_redirect(char* str){
 *calculate the slot, find the context, and then send command
 */
 int __set_nodb(const char* key,const char* set_in_value){
-	redisContext *c = globalContext;
+	redisContext *c = NULL;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
 #ifdef DEBUG	
@@ -145,7 +151,7 @@ int __get_nodb(const char* key,char* get_in_value){
 	   return -1;
 	}
 
-	redisContext * c = globalContext;
+	redisContext * c = NULL;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
 #ifdef DEBUG
@@ -213,8 +219,8 @@ int get(const char *key, char *get_in_value,int dbnum){
 *based on the string returned. It does this by calling functions from_str_to_cluster,
 *process_clusterInfo,and addign_slot;
 */
-clusterInfo* __clusterInfo(){
-    redisContext *c = globalContext;
+clusterInfo* __clusterInfo(redisContext* localContext){
+    redisContext *c = localContext;
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
 #ifdef DEBUG
     printf("the raw return value = %s\n",r->str);
@@ -432,7 +438,7 @@ void disconnectDatabase(){
 *The global context is used to inquery cluster information
 */
 void __global_disconnect(){
-     redisFree(globalContext);
+     //redisFree(globalContext);
 #ifdef SUCCESS
      printf("global context freed\n");
 #endif
@@ -442,16 +448,16 @@ void __global_disconnect(){
 *Flushdb command. 0 means the command succeed, otherwise fail.
 */
 int flushDb(){
-    redisContext* c = globalContext;
+    redisContext *c = NULL;
     int len = globalCluster->len;
     int i;
     for(i=0;i<len;i++){
        c = globalCluster->parse[i]->context;
        redisReply *r = (redisReply *)redisCommand(c, "flushdb");
        if(r->type == REDIS_REPLY_STATUS){
-#ifdef SUCCESS
+
            printf("flushdb status = %s\n",r->str);
-#endif
+
 	}else if(r->type == REDIS_REPLY_STRING){
            printf("flush db = %s\n",r->str);
         }else{

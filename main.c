@@ -12,10 +12,10 @@ int main(){
   connectRedis(ip,port);
 
   int sum = 0;
-  sum += set("db1a","djxxsalrrr",1);
-  sum += set("db2a","slfdxxjsalrrr",1);
-  sum += set("db3a","slfdjsxxalrrr",1);
-  sum += set("db4a","jslfdjsaxxlrrr",1);
+  sum += set("db1a","djalrrr",1);
+  sum += set("db2a","sllrrr",1);
+  sum += set("db3a","slrr",1);
+  sum += set("db4a","jsrr",1);
   
   sum += get("db1a",value,1);
   printf("get db1: %s\n",value);

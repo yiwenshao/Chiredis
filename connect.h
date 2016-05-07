@@ -7,11 +7,6 @@
 #include <assert.h>
 #include <hiredis/hiredis.h>
 
-void connectRedis(char*ip,int port);
-int set(const char *key, const char *set_in_value,int dunum);
-int get(const char *key, char *get_in_value, int dbnum);
-
-
 typedef struct parseArgv{
     char * ip;
     redisContext * context;
@@ -26,12 +21,18 @@ typedef struct clusterInfo{
     char * argv[50];
     parseArgv* parse[50];
     void * slot_to_host[16384];
+    redisContext* globalContext;
 }clusterInfo;
+
+
+clusterInfo* connectRedis(char*ip,int port);
+int set(const char *key, const char *set_in_value,int dunum);
+int get(const char *key, char *get_in_value, int dbnum);
 
 
 
 void __process_cluster_str(char* str);
-clusterInfo* __clusterInfo();
+clusterInfo* __clusterInfo(redisContext* localContext);
 
 void print_clusterInfo_parsed(clusterInfo* mycluster);
 void process_cluterInfo(clusterInfo* mycluster);
@@ -47,7 +48,7 @@ void __global_disconnect();
 void __set_redirect(char* str);
 int __get_nodb(const char* key,char* get_in_value);
 
-void __connect_cluster(char* ip, int port);
+clusterInfo* __connect_cluster(char* ip, int port);
 int __set_nodb(const char* key,const char* set_in_value);
 int __set_withdb(const char* key, const char* set_in_value, int dbnum);
 int __get_withdb(const char* key,char*get_in_value,int dbnum);
@@ -57,6 +58,6 @@ int flushDb();
 //char* globalSetKey;
 //char* globalGetKey;
 clusterInfo* globalCluster;
-redisContext * globalContext;
+//redisContext * globalContext;
 
 #endif
