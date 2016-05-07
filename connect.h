@@ -9,8 +9,8 @@
 
 void connectRedis(char*ip,int port);
 int set(const char *key, const char *set_in_value,int dunum);
-int get(const char *key, char *value, int dbnum);
-redisContext * globalContext;
+int get(const char *key, char *get_in_value, int dbnum);
+
 
 typedef struct parseArgv{
     char * ip;
@@ -28,7 +28,7 @@ typedef struct clusterInfo{
     void * slot_to_host[16384];
 }clusterInfo;
 
-clusterInfo* globalCluster;
+
 
 void __process_cluster_str(char* str);
 clusterInfo* __clusterInfo();
@@ -45,13 +45,18 @@ void disconnectDatabase();
 void __global_disconnect();
 
 void __set_redirect(char* str);
-int __get_nodb(const char* key,char* value);
-char* value;
-char* globalSetKey;
-char* globalGetKey;
+int __get_nodb(const char* key,char* get_in_value);
+
 void __connect_cluster(char* ip, int port);
 int __set_nodb(const char* key,const char* set_in_value);
 int __set_withdb(const char* key, const char* set_in_value, int dbnum);
-int __get_withdb(const char* key,char* value,int dbnum);
+int __get_withdb(const char* key,char*get_in_value,int dbnum);
 int flushDb();
+
+char* value;
+char* globalSetKey;
+char* globalGetKey;
+clusterInfo* globalCluster;
+redisContext * globalContext;
+
 #endif

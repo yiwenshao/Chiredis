@@ -136,10 +136,10 @@ int set(const char *key,const char *set_in_value,int dbnum){
 /*
 *get method without use db option. here const char* is not compitable with char*
 */
-int __get_nodb(const char* key,char* value){
-        assert(value != NULL);
+int __get_nodb(const char* key,char* get_in_value){
+        assert(get_in_value != NULL);
 	if(key==NULL){
-	   strcpy(value,"key is NULL");
+	   strcpy(get_in_value,"key is NULL");
 	   return -1;
 	}
 
@@ -159,7 +159,7 @@ int __get_nodb(const char* key,char* value){
 	if(tempArgv->context == NULL){
 	    //this error can not be ignored
 	    printf("context = NULL in function set\n");
-	    strcpy(value,"conext ==NULL");
+	    strcpy(get_in_value,"conext ==NULL");
 	    return -1;
 	}
 	c = tempArgv->context;
@@ -184,24 +184,24 @@ int __get_nodb(const char* key,char* value){
 #ifdef DEBUG
 		printf("get still need redirection  %s\n",r->str);
 #endif
-		strcpy(value,"redirection");
+		strcpy(get_in_value,"redirection");
 		return -1;
 	} else {
 		printf("unknowd type return get\n");
 		return -1;
 	}
 }
-int __get_withdb(const char* key, char* value,int dbnum){
+int __get_withdb(const char* key, char* get_in_value,int dbnum){
 	sprintf(globalGetKey,"%d\b%s",dbnum,key);
-	int re = __get_nodb(globalGetKey,value);
+	int re = __get_nodb(globalGetKey,get_in_value);
 	sprintf(globalGetKey,"%s","");
 	return re;
 }
 
 
-int get(const char *key, char *value,int dbnum){
+int get(const char *key, char *get_in_value,int dbnum){
        //__get_nodb(key,value);
-      return  __get_withdb(key,value,dbnum);
+      return  __get_withdb(key,get_in_value,dbnum);
 }
 
 /*
