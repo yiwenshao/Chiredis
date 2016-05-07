@@ -46,8 +46,8 @@ void __test_slot(clusterInfo* mycluster);
 void assign_slot(clusterInfo* mycluster);
 void __add_context_to_cluster(clusterInfo* mycluster);
 void __remove_context_from_cluster(clusterInfo* mycluster);
-void disconnectDatabase();
-void __global_disconnect();
+void disconnectDatabase(clusterInfo* cluster);
+void __global_disconnect(clusterInfo* cluster);
 
 void __set_redirect(char* str);
 
@@ -57,7 +57,7 @@ int flushDb(clusterInfo* cluster);
 //char* value;
 //char* globalSetKey;
 //char* globalGetKey;
-clusterInfo* globalCluster;
+//clusterInfo* globalCluster;
 //redisContext * globalContext;
 
 #endif

@@ -421,7 +421,9 @@ void __remove_context_from_cluster(clusterInfo* mycluster){
    redisContext * tempContext;
    
    for(i=0;i<len;i++){
-      redisFree(mycluster->parse[i]->context);
+      if(mycluster->parse[i]->context != NULL)      
+           redisFree(mycluster->parse[i]->context);
+      else printf("context == NULL in remove_context_from_cluster\n");
    }
 #ifdef SUCCESS
    printf("%d connections closed!!\n",len);
@@ -429,16 +431,17 @@ void __remove_context_from_cluster(clusterInfo* mycluster){
 }
 
 
-void disconnectDatabase(){
-    __global_disconnect();
-    //__remove_context_from_cluster(globalCluster);
+void disconnectDatabase(clusterInfo* cluster){
+    __global_disconnect(cluster);
+    __remove_context_from_cluster(cluster);
 }
 
 /*
 *The global context is used to inquery cluster information
 */
-void __global_disconnect(){
-     //redisFree(globalContext);
+void __global_disconnect(clusterInfo* cluster){
+     if(cluster->globalContext !=NULL)
+     redisFree(cluster->globalContext);
 #ifdef SUCCESS
      printf("global context freed\n");
 #endif

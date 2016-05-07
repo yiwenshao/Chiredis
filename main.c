@@ -39,6 +39,6 @@ int main(){
 
 
   flushDb(cluster);
-  disconnectDatabase();
+  disconnectDatabase(cluster);
   return 0;
 }
