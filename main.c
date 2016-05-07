@@ -9,13 +9,17 @@ int main(){
   char * ip = "115.29.113.239";
   int port = 7002;
   char*  value = (char*)malloc(1024*8); 
-  connectRedis(ip,port);
+  clusterInfo *cluster = connectRedis(ip,port);
+  if(cluster!=NULL)
+  	printf("!=null\n");
+  else printf("==null\n");
+//  print_clusterInfo_parsed(cluster);
 
   int sum = 0;
-  sum += set("db1a","djalrrr",1);
-  sum += set("db2a","sllrrr",1);
-  sum += set("db3a","slrr",1);
-  sum += set("db4a","jsrr",1);
+  sum += set(cluster,"db1a","rr",1);
+  sum += set(cluster,"db2a","rr",1);
+  sum += set(cluster,"db3a","xr",1);
+  sum += set(cluster,"db4a","xr",1);
   
   sum += get("db1a",value,1);
   printf("get db1: %s\n",value);

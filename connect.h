@@ -26,10 +26,14 @@ typedef struct clusterInfo{
 
 
 clusterInfo* connectRedis(char*ip,int port);
-int set(const char *key, const char *set_in_value,int dunum);
+int set(clusterInfo* cluster,const char *key, const char *set_in_value,int dunum);
+int __set_nodb(clusterInfo* cluster,const char* key,const char* set_in_value);
+int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum);
+
+
 int get(const char *key, char *get_in_value, int dbnum);
-
-
+int __get_withdb(const char* key,char*get_in_value,int dbnum);
+int __get_nodb(const char* key,char* get_in_value);
 
 void __process_cluster_str(char* str);
 clusterInfo* __clusterInfo(redisContext* localContext);
@@ -46,14 +50,10 @@ void disconnectDatabase();
 void __global_disconnect();
 
 void __set_redirect(char* str);
-int __get_nodb(const char* key,char* get_in_value);
 
 clusterInfo* __connect_cluster(char* ip, int port);
-int __set_nodb(const char* key,const char* set_in_value);
-int __set_withdb(const char* key, const char* set_in_value, int dbnum);
-int __get_withdb(const char* key,char*get_in_value,int dbnum);
-int flushDb();
 
+int flushDb();
 //char* value;
 //char* globalSetKey;
 //char* globalGetKey;

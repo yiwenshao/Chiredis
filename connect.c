@@ -81,14 +81,14 @@ void __set_redirect(char* str){
 /*
 *calculate the slot, find the context, and then send command
 */
-int __set_nodb(const char* key,const char* set_in_value){
+int __set_nodb(clusterInfo* cluster,const char* key,const char* set_in_value){
 	redisContext *c = NULL;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
 #ifdef DEBUG	
 	printf("slot calculated= %d\n",myslot);
 #endif
-        parseArgv* tempArgv = ((parseArgv*)(globalCluster->slot_to_host[myslot]));
+        parseArgv* tempArgv = ((parseArgv*)(cluster->slot_to_host[myslot]));
 	if(tempArgv->slots[myslot]!=1){
 #ifdef DEBUG
 	    printf("slot error in set // connect.c\n");
@@ -128,17 +128,17 @@ int __set_nodb(const char* key,const char* set_in_value){
 /*
 *set method with the db option
 */
-int __set_withdb(const char* key, const char* set_in_value, int dbnum){
+int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum){
         char* localSetKey = (char*)malloc(1024);
 	sprintf(localSetKey,"%d\b%s",dbnum,key);
-	int re = __set_nodb(localSetKey,set_in_value);
+	int re = __set_nodb(cluster,localSetKey,set_in_value);
         free(localSetKey);   
 	return re;
 }
 
-int set(const char *key,const char *set_in_value,int dbnum){
+int set(clusterInfo* cluster, const char *key,const char *set_in_value,int dbnum){
 	//__set_nodb(key,value);
-	return __set_withdb(key,set_in_value,dbnum);
+	return __set_withdb(cluster,key,set_in_value,dbnum);
 }
 
 /*
