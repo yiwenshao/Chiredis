@@ -8,7 +8,7 @@
 #include <hiredis/hiredis.h>
 
 void connectRedis(char*ip,int port);
-int set(const char *key, const char *value,int dunum);
+int set(const char *key, const char *set_in_value,int dunum);
 int get(const char *key, char *value, int dbnum);
 redisContext * globalContext;
 
@@ -50,8 +50,8 @@ char* value;
 char* globalSetKey;
 char* globalGetKey;
 void __connect_cluster(char* ip, int port);
-int __set_nodb(const char* key,const char* value);
-int __set_withdb(const char* key, const char* value, int dbnum);
+int __set_nodb(const char* key,const char* set_in_value);
+int __set_withdb(const char* key, const char* set_in_value, int dbnum);
 int __get_withdb(const char* key,char* value,int dbnum);
 int flushDb();
 #endif

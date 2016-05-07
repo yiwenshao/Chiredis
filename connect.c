@@ -75,7 +75,7 @@ void __set_redirect(char* str){
 /*
 *calculate the slot, find the context, and then send command
 */
-int __set_nodb(const char* key,const char* value){
+int __set_nodb(const char* key,const char* set_in_value){
 	redisContext *c = globalContext;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
@@ -97,7 +97,7 @@ int __set_nodb(const char* key,const char* value){
 #ifdef DEBUG
 	printf("set start _____________________\n");
 #endif
-	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, value);
+	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, set_in_value);
 
 	if (r->type == REDIS_REPLY_STRING){
 
@@ -122,15 +122,15 @@ int __set_nodb(const char* key,const char* value){
 /*
 *set method with the db option
 */
-int __set_withdb(const char* key, const char* value, int dbnum){
+int __set_withdb(const char* key, const char* set_in_value, int dbnum){
 
 	sprintf(globalSetKey,"%d\b%s",dbnum,key);
-	return __set_nodb(globalSetKey,value);
+	return __set_nodb(globalSetKey,set_in_value);
 }
 
-int set(const char *key,const char *value,int dbnum){
+int set(const char *key,const char *set_in_value,int dbnum){
 	//__set_nodb(key,value);
-	return __set_withdb(key,value,dbnum);
+	return __set_withdb(key,set_in_value,dbnum);
 }
 
 /*
