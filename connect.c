@@ -15,15 +15,15 @@
 *which keeps connections to all nodes in the cluster.
 */
 void __connect_cluster(char* ip, int port){
-     value = (char*)malloc(1024*8);
+
      globalSetKey = (char*)malloc(1024);
      globalGetKey = (char*)malloc(1024);
-     
+/*     
      if(value == NULL||globalSetKey==NULL){
        printf("can not assign global value space, no connection either\n");
        return;
      }
-
+*/
      globalContext = redisConnect(ip,port);
 	 if(globalContext->err){
 	     redisFree(globalContext);
@@ -172,11 +172,11 @@ int __get_nodb(const char* key,char* get_in_value){
 		printf("%s = %s\n", key, r->str);
 #endif  
 		int len = strlen(r->str);
-		strcpy(value, r->str);
+		strcpy(get_in_value, r->str);
 		freeReplyObject(r);
 		return 0;
 	}else if (r->type == REDIS_REPLY_NIL) {
-		strcpy(value,"nil");
+		strcpy(get_in_value,"nil");
 		freeReplyObject(r);
 		return 0;
 	} else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){

@@ -53,7 +53,7 @@ int __set_withdb(const char* key, const char* set_in_value, int dbnum);
 int __get_withdb(const char* key,char*get_in_value,int dbnum);
 int flushDb();
 
-char* value;
+//char* value;
 char* globalSetKey;
 char* globalGetKey;
 clusterInfo* globalCluster;
