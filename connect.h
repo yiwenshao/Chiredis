@@ -26,9 +26,9 @@ typedef struct clusterInfo{
 
 
 clusterInfo* connectRedis(char*ip,int port);
-int set(clusterInfo* cluster,const char *key, const char *set_in_value,int dunum,int tid);
-int __set_nodb(clusterInfo* cluster,const char* key,const char* set_in_value);
-int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum,int tid);
+int set(clusterInfo* cluster,const char *key, char *set_in_value,int dunum,int tid);
+int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value);
+int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid);
 
 
 int get(clusterInfo*cluster, const char *key, char *get_in_value, int dbnum,int tid);

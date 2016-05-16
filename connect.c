@@ -81,7 +81,7 @@ void __set_redirect(char* str){
 /*
 *calculate the slot, find the context, and then send command
 */
-int __set_nodb(clusterInfo* cluster,const char* key,const char* set_in_value){
+int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
 	redisContext *c = NULL;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
@@ -128,7 +128,7 @@ int __set_nodb(clusterInfo* cluster,const char* key,const char* set_in_value){
 /*
 *set method with the db option
 */
-int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum,int tid){
+int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid){
         int localTid = tid%99;
 	if(localTid < 0){
 	   printf("local tid error in set\n");
@@ -149,7 +149,7 @@ int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value,
 	return re;
 }
 
-int set(clusterInfo* cluster, const char *key,const char *set_in_value,int dbnum,int tid){
+int set(clusterInfo* cluster, const char *key,char *set_in_value,int dbnum,int tid){
 	//__set_nodb(key,value);
 	return __set_withdb(cluster,key,set_in_value,dbnum,tid);
 }
