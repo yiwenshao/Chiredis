@@ -461,6 +461,7 @@ void disconnectDatabase(clusterInfo* cluster){
 }
 
 /*
+*
 *The global context is used to inquery cluster information
 */
 void __global_disconnect(clusterInfo* cluster){
@@ -499,8 +500,10 @@ int flushDb(clusterInfo* cluster){
     if(i == len) return 0;
     else return -1;
 }
-
-
+/*
+*init global space for getKey and set key
+*
+*/
 void init_global(){
      int i;
      for(i=0;i<99;i++){
