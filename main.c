@@ -9,6 +9,7 @@ void *db_function(void* input){
   char * ip = "115.29.113.239";
   int port = 5674;
   printf("thread=%d\n",*(int*)input);
+  int my_tid = *(int*)input;
 
   /*
   *each thread has its own value and cluster struct.
@@ -25,20 +26,20 @@ void *db_function(void* input){
 
   sprintf(key,"key=%d",*((int*)input));
 
-  sum += set(cluster,key,"aaaaa",1,1);
-  sum += get(cluster,key,value,1,1);
+  sum += set(cluster,key,"aaaaa",1,my_tid);
+  sum += get(cluster,key,value,1,my_tid);
   printf("get %s: %s\n",key,value);
 
-  sum += set(cluster,key,"fffff",1,1);
-  sum += get(cluster,key,value,1,1);
+  sum += set(cluster,key,"fffff",1,my_tid);
+  sum += get(cluster,key,value,1,my_tid);
   printf("get %s:%s\n",key,value);
 
-  sum += set(cluster,key,"eafde",1,1);
-  sum += get(cluster,key,value,1,1);
+  sum += set(cluster,key,"eafde",1,my_tid);
+  sum += get(cluster,key,value,1,my_tid);
   printf("get %s: %s\n",key,value);
 
-  sum += set(cluster,key,"abcde",1,1);
-  sum += get(cluster,key,value,1,1);
+  sum += set(cluster,key,"abcde",1,my_tid);
+  sum += get(cluster,key,value,1,my_tid);
   printf("get %s: %s\n",key,value);
   
   if(sum == 0)

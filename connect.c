@@ -201,11 +201,22 @@ int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 	}
 }
 int __get_withdb(clusterInfo* cluster, const char* key, char* get_in_value,int dbnum,int tid){
-	char *localGetKey = (char*)malloc(1024);
+        int localTid = tid%99;
+	if (localTid <0){
+	    printf("local tid error\n");
+	    return -1;
+	}
+	if(global_getspace[localTid].used == 1){
+	     printf("global get space used error\n");
+	     return -1;
+	}
+	char *localGetKey = global_getspace[localTid].getKey;
+	global_getspace[localTid].used = 1;
 
 	sprintf(localGetKey,"%d\b%s",dbnum,key);
 	int re = __get_nodb(cluster,localGetKey,get_in_value);
-	free(localGetKey);
+	//free(localGetKey);
+	global_getspace[localTid].used = 0;
 	return re;
 }
 
