@@ -108,15 +108,17 @@ int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
 	if (r->type == REDIS_REPLY_STRING){
 
 		printf("set should not return str ?value = %s\n", r->str);
-		return 0;
+		return -1;
 	}else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
 		printf("set still need redirection ? %s\n", r->str);
 		__set_redirect(r->str);
 		return -1;
 	}else if(r->type == REDIS_REPLY_STATUS){
+	        
 #ifdef DEBUG
 		printf("STATUS = %s\n",r->str);
 #endif
+                sprintf(set_in_value,"%s",r->str);
 		return 0;
 	}else{
 	   printf("set error\n");
@@ -158,7 +160,7 @@ int set(clusterInfo* cluster, const char *key,char *set_in_value,int dbnum,int t
 *get method without use db option. here const char* is not compitable with char*
 */
 int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
-        assert(get_in_value != NULL);
+//        assert(get_in_value != NULL);
 	if(key==NULL){
 	   strcpy(get_in_value,"key is NULL");
 	   return -1;

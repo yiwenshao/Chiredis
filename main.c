@@ -57,7 +57,11 @@ void *db_function(void* input){
 void *db_bench(void* input){
   struct timeval tv1;
   struct timeval tv2;
-  
+  long int * time_array = (long int*)malloc(200000*sizeof(long int));
+  if (time_array == NULL){
+      printf("time unallocated\n");
+      return NULL;
+  }
 
   char * ip = "115.29.113.239";
   int port = 5674;
@@ -77,14 +81,37 @@ void *db_bench(void* input){
   }
   char* key = (char*)malloc(100);
 //start to get and set here
-  sprintf(key,"key=%d",my_tid);
-  sprintf(value,"value=%d",my_tid);
-  int re = set(cluster,key,value,1,my_tid);
-  printf("%d set result = %s re = %d\n",my_tid,value,re);
-  sprintf(value,"%s","-1");
-  get(cluster,key,value,1,my_tid);
-  printf("get result = %s\n",value);
+  int i=0;
+  int count = 0;
+  for(;i<2;i++){
+    sprintf(key,"%dkey=%d",my_tid,my_tid+i);
+    gettimeofday(&tv1,NULL);
+    sprintf(value,"time=%ld",tv1.tv_usec);
+    get(cluster,key,value,1,my_tid);
+    gettimeofday(&tv2,NULL);
+    time_array[count] = tv2.tv_usec - tv1.tv_usec;
+    if(time_array[count] <0 ){
+        printf("why  up\n");
+    }
+    count++;
 
+    if(strcmp(value,"nil")==0){
+         gettimeofday(&tv1,NULL);
+         int re = set(cluster,key,value,1,my_tid);
+         gettimeofday(&tv2,NULL);
+	 time_array[count] = tv2.tv_usec - tv1.tv_usec;
+	 if(time_array[count]<0)
+	    printf("why down\n");
+	 count++;
+    }
+  }
+  time_array[count]=-1;
+  
+  for(i=0;i<200000;i++){
+      if(time_array[i]!=-1)
+          printf("time = %ld\n",time_array[i]);
+      else break;
+  }
   flushDb(cluster);
   disconnectDatabase(cluster);
 }
