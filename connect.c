@@ -129,11 +129,23 @@ int __set_nodb(clusterInfo* cluster,const char* key,const char* set_in_value){
 *set method with the db option
 */
 int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum,int tid){
-        
-        char* localSetKey = (char*)malloc(1024);
+        int localTid = tid%99;
+	if(localTid < 0){
+	   printf("local tid error in set\n");
+	   return -1;
+	}
+	if(global_setspace[localTid].used != 0 ){
+	   printf("global set space already in use\n");
+	   return -1;
+	}
+        char* localSetKey = global_setspace[localTid].setKey;
+	global_setspace[localTid].used=1;
+
+
 	sprintf(localSetKey,"%d\b%s",dbnum,key);
 	int re = __set_nodb(cluster,localSetKey,set_in_value);
-        free(localSetKey);   
+        //free(localSetKey);   
+	global_setspace[localTid].used = 0;
 	return re;
 }
 
