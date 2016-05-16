@@ -16,7 +16,6 @@
 */
 clusterInfo* __connect_cluster(char* ip, int port){
 
-
      //globalGetKey = (char*)malloc(1024);
 /*     
      if(value == NULL||globalSetKey==NULL){
@@ -44,6 +43,7 @@ clusterInfo* __connect_cluster(char* ip, int port){
 }
 
 clusterInfo* connectRedis(char* ip, int port){
+
      __connect_cluster(ip,port);
 }
 
@@ -128,7 +128,8 @@ int __set_nodb(clusterInfo* cluster,const char* key,const char* set_in_value){
 /*
 *set method with the db option
 */
-int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum){
+int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum,int tid){
+        
         char* localSetKey = (char*)malloc(1024);
 	sprintf(localSetKey,"%d\b%s",dbnum,key);
 	int re = __set_nodb(cluster,localSetKey,set_in_value);
@@ -136,9 +137,9 @@ int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value,
 	return re;
 }
 
-int set(clusterInfo* cluster, const char *key,const char *set_in_value,int dbnum){
+int set(clusterInfo* cluster, const char *key,const char *set_in_value,int dbnum,int tid){
 	//__set_nodb(key,value);
-	return __set_withdb(cluster,key,set_in_value,dbnum);
+	return __set_withdb(cluster,key,set_in_value,dbnum,tid);
 }
 
 /*
@@ -199,7 +200,7 @@ int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 		return -1;
 	}
 }
-int __get_withdb(clusterInfo* cluster, const char* key, char* get_in_value,int dbnum){
+int __get_withdb(clusterInfo* cluster, const char* key, char* get_in_value,int dbnum,int tid){
 	char *localGetKey = (char*)malloc(1024);
 
 	sprintf(localGetKey,"%d\b%s",dbnum,key);
@@ -209,9 +210,9 @@ int __get_withdb(clusterInfo* cluster, const char* key, char* get_in_value,int d
 }
 
 
-int get(clusterInfo* cluster, const char *key, char *get_in_value,int dbnum){
+int get(clusterInfo* cluster, const char *key, char *get_in_value,int dbnum,int tid){
        //__get_nodb(key,value);
-      return  __get_withdb(cluster,key,get_in_value,dbnum);
+      return  __get_withdb(cluster,key,get_in_value,dbnum,tid);
 }
 
 /*
@@ -475,3 +476,16 @@ int flushDb(clusterInfo* cluster){
     if(i == len) return 0;
     else return -1;
 }
+
+
+void init_global(){
+     int i;
+     for(i=0;i<99;i++){
+        global_getspace[i].getKey = (char*)malloc(1024);
+        global_setspace[i].setKey = (char*)malloc(1024);
+	global_getspace[i].used = 0;
+	global_setspace[i].used = 0;
+     }
+}
+
+

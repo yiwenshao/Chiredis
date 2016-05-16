@@ -25,20 +25,20 @@ void *db_function(void* input){
 
   sprintf(key,"key=%d",*((int*)input));
 
-  sum += set(cluster,key,"aaaaa",1);
-  sum += get(cluster,key,value,1);
+  sum += set(cluster,key,"aaaaa",1,1);
+  sum += get(cluster,key,value,1,1);
   printf("get %s: %s\n",key,value);
 
-  sum += set(cluster,key,"fffff",1);
-  sum += get(cluster,key,value,1);
+  sum += set(cluster,key,"fffff",1,1);
+  sum += get(cluster,key,value,1,1);
   printf("get %s:%s\n",key,value);
 
-  sum += set(cluster,key,"eafde",1);
-  sum += get(cluster,key,value,1);
+  sum += set(cluster,key,"eafde",1,1);
+  sum += get(cluster,key,value,1,1);
   printf("get %s: %s\n",key,value);
 
-  sum += set(cluster,key,"abcde",1);
-  sum += get(cluster,key,value,1);
+  sum += set(cluster,key,"abcde",1,1);
+  sum += get(cluster,key,value,1,1);
   printf("get %s: %s\n",key,value);
   
   if(sum == 0)
@@ -53,6 +53,7 @@ void *db_function(void* input){
 int main(){
  pthread_t th[16];
  int res, i;
+ init_global();
  void* thread_result;
  int thread[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 

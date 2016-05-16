@@ -26,13 +26,13 @@ typedef struct clusterInfo{
 
 
 clusterInfo* connectRedis(char*ip,int port);
-int set(clusterInfo* cluster,const char *key, const char *set_in_value,int dunum);
+int set(clusterInfo* cluster,const char *key, const char *set_in_value,int dunum,int tid);
 int __set_nodb(clusterInfo* cluster,const char* key,const char* set_in_value);
-int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum);
+int __set_withdb(clusterInfo* cluster,const char* key, const char* set_in_value, int dbnum,int tid);
 
 
-int get(clusterInfo*cluster, const char *key, char *get_in_value, int dbnum);
-int __get_withdb(clusterInfo*cluster, const char* key,char*get_in_value,int dbnum);
+int get(clusterInfo*cluster, const char *key, char *get_in_value, int dbnum,int tid);
+int __get_withdb(clusterInfo*cluster, const char* key,char*get_in_value,int dbnum,int tid);
 int __get_nodb(clusterInfo*cluster, const char* key,char* get_in_value);
 
 void __process_cluster_str(char* str);
@@ -61,8 +61,13 @@ typedef struct getspace{
 }getspace;
 
 typedef struct setspace{
-     char* setSpace;
+     char* setKey;
      int used;
 }setspace;
+
+getspace global_getspace[100];
+setspace global_setspace[100];
+
+void init_global();
 
 #endif
