@@ -54,4 +54,15 @@ void __set_redirect(char* str);
 clusterInfo* __connect_cluster(char* ip, int port);
 
 int flushDb(clusterInfo* cluster);
+
+typedef struct getspace{
+     char * getKey;
+     int used;
+}getspace;
+
+typedef struct setspace{
+     char* setSpace;
+     int used;
+}setspace;
+
 #endif
