@@ -7,7 +7,7 @@
 */
 void *db_function(void* input){
   char * ip = "115.29.113.239";
-  int port = 7002;
+  int port = 5674;
   printf("thread=%d\n",*(int*)input);
 
   /*

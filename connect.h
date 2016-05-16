@@ -54,10 +54,4 @@ void __set_redirect(char* str);
 clusterInfo* __connect_cluster(char* ip, int port);
 
 int flushDb(clusterInfo* cluster);
-//char* value;
-//char* globalSetKey;
-//char* globalGetKey;
-//clusterInfo* globalCluster;
-//redisContext * globalContext;
-
 #endif
