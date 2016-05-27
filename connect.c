@@ -237,8 +237,19 @@ int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 		strcpy(get_in_value,"redirection");
 		return -1;
 	} else {
-		printf("unknowd type return get\n");
-		return -1;
+		printf("get return type=%d,str=%s,%d %s",r->type,\
+		       r->str,__LINE__,__FILE__);
+                if(r->type == REDIS_REPLY_ARRAY){
+		   strcpy(get_in_value,"return bulk");  
+		}else if(r->type == REDIS_REPLY_STATUS){
+		   strcpy(get_in_value,"return status");
+		}else if(r->type == REDIS_REPLY_INTEGER){
+		      sprintf(get_in_value,"%lld",r->integer);
+		}else{
+		   strcpy(get_in_value,"unknown type");
+		}
+		freeReplyObject(r);
+		return 0;
 	}
 }
 /*
