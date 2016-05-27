@@ -51,6 +51,7 @@ void *db_function(void* input){
   disconnectDatabase(cluster);
   printf("intput = %d\n",*((int*)input)); 
 }
+
 /*
 *try to write a small benchmark using timeval.
 */
@@ -101,6 +102,7 @@ void *db_bench(void* input){
     gettimeofday(&tv1,NULL);
     sprintf(value,"time=%ld",tv1.tv_usec);
     get(cluster,key,value,1,my_tid);
+
     gettimeofday(&tv2,NULL);
 
     time_array[count] = tv2.tv_usec - tv1.tv_usec;
@@ -115,18 +117,14 @@ void *db_bench(void* input){
          gettimeofday(&tv1,NULL);
          int re = set(cluster,key,value,1,my_tid);
          gettimeofday(&tv2,NULL);
-
 	 time_array[count] = tv2.tv_usec - tv1.tv_usec;
-
 	 if(time_array[count]<0)
 	    why_down_count++;
 	 count++;
     }
   }
-
   printf("i=%d_______________________________________________________\n",i);
-  time_array[count]=-1;
-  
+  time_array[count]=-1;  
   char temp_write[100];
   for(i=0;i<200000;i++){
       if(time_array[i]!=-1){
@@ -140,9 +138,9 @@ void *db_bench(void* input){
 
   flushDb(cluster);
   disconnectDatabase(cluster);
-}
 
-int main(){
+}
+void test_with_multiple_threads(){
  pthread_t th[16];
  int res, i;
  init_global();
@@ -164,7 +162,32 @@ int main(){
       break;
    }
   }
+}
 
+int main(){
+ init_global();
+// test_with_multiple_threads();
+
+  char * ip = "115.29.113.239";
+  int port = 5674;
+  clusterInfo *cluster = connectRedis(ip,port);
+  if(cluster == NULL){
+     printf("unable to connect\n");
+     return 0;
+  }
+  
+  char* key = (char*)malloc(100);
+  char* value = (char*)malloc(100);
+  sprintf(key,"%s","mykeynow");
+  sprintf(value,"%s","myvaluenow");
+
+  set(cluster,key,value,0,0);
+  int g=get(cluster,key,value,0,0);
+
+  printf("get result=%d, value=%s\n",g,value);
+
+  flushDb(cluster);
+  disconnectDatabase(cluster);
 
 
  return 0;

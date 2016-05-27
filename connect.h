@@ -65,6 +65,7 @@ typedef struct setspace{
      int used;
 }setspace;
 
+//get and set operation can use this global buffer 
 getspace global_getspace[100];
 setspace global_setspace[100];
 

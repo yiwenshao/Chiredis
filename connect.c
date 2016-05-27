@@ -5,35 +5,62 @@
 #include "crc16.h"
 #include <string.h>
 
+#define CHECK_REPLY
 //#define DEBUG
-//#define SUCCESS
-
+int check_reply(redisReply* reply){
+     switch(reply->type){
+     case REDIS_REPLY_STATUS:
+          return 0;
+          break;
+     case REDIS_REPLY_ERROR:
+          return -1;
+          break;
+     case REDIS_REPLY_INTEGER:
+          return 0;
+          break;
+     case REDIS_REPLY_NIL:
+          return 0;
+          break; 
+     case REDIS_REPLY_STRING:
+          return 0;
+          break;
+     case REDIS_REPLY_ARRAY:
+          return 0;
+          break;
+     default:
+          printf("check reply error %d %s",__LINE__,__FILE__);
+     }
+}
 /*
 *use the globalContext to connect to the host specified by the user;
 *send cluster nodes command through this context;
 *receive the infomation and create clusterInfo struct,
 *which keeps connections to all nodes in the cluster.
+*
+*returns NULL if errors occur
 */
 clusterInfo* __connect_cluster(char* ip, int port){
 
-     //globalGetKey = (char*)malloc(1024);
-/*     
-     if(value == NULL||globalSetKey==NULL){
-       printf("can not assign global value space, no connection either\n");
-       return;
-     }
-*/
      redisContext* localContext = redisConnect(ip,port);
-	 if(localContext->err){
-	     redisFree(localContext);
-		 printf("global connection refused\n");
-		 return NULL;
+	 if(localContext==NULL || localContext->err){
+	     if(localContext!=NULL){
+                  printf("global connection error %s %d %s\n",\
+		                localContext->errstr,__LINE__,__FILE__);
+	          redisFree(localContext);
+		  return NULL;
+	       }else{
+	          printf("can not allocate global context %d %s",\
+		                                  __LINE__,__FILE__);
+		  return NULL;
+	       }
 	 }else{
 #ifdef DEBUG	 
 	     printf("succeed in global connecting\n");
 #endif
 	 }
+	 
 	clusterInfo* cluster = __clusterInfo(localContext);
+
 	if(cluster!=NULL)
 	   return cluster;
 	else{
@@ -43,7 +70,6 @@ clusterInfo* __connect_cluster(char* ip, int port){
 }
 
 clusterInfo* connectRedis(char* ip, int port){
-
      __connect_cluster(ip,port);
 }
 
@@ -89,6 +115,7 @@ int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
 	printf("slot calculated= %d\n",myslot);
 #endif
         parseArgv* tempArgv = ((parseArgv*)(cluster->slot_to_host[myslot]));
+
 	if(tempArgv->slots[myslot]!=1){
 #ifdef DEBUG
 	    printf("slot error in set // connect.c\n");
@@ -214,7 +241,12 @@ int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 		return -1;
 	}
 }
-int __get_withdb(clusterInfo* cluster, const char* key, char* get_in_value,int dbnum,int tid){
+/*
+*tid can be used to  allocate global get/put space for a specific thread
+*each thread only need one tid and one space
+*/
+int __get_withdb(clusterInfo* cluster, const char* key,\
+                            char* get_in_value,int dbnum,int tid){
         int localTid = tid%99;
 	if (localTid <0){
 	    printf("local tid error\n");
@@ -248,6 +280,7 @@ int get(clusterInfo* cluster, const char *key, char *get_in_value,int dbnum,int 
 clusterInfo* __clusterInfo(redisContext* localContext){
     redisContext *c = localContext;
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
+    printf("type=%d",r->type);
 #ifdef DEBUG
     printf("the raw return value = %s\n",r->str);
 #endif
