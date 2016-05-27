@@ -27,7 +27,7 @@ clusterInfo* __connect_cluster(char* ip, int port){
 	 if(localContext->err){
 	     redisFree(localContext);
 		 printf("global connection refused\n");
-		 return;
+		 return NULL;
 	 }else{
 #ifdef DEBUG	 
 	     printf("succeed in global connecting\n");

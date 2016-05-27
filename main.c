@@ -130,7 +130,7 @@ void *db_bench(void* input){
   char temp_write[100];
   for(i=0;i<200000;i++){
       if(time_array[i]!=-1){
-          sprintf(temp_write,"%d\n",time_array[i]);
+          sprintf(temp_write,"%ld\n",time_array[i]);
           fputs(temp_write,time_file);
       }    
       else break;
