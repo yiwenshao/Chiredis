@@ -28,6 +28,7 @@ typedef struct singleClient{
     redisContext* singleContext;
     int port;
     const char* ip;
+    int pipe_count;
 }singleClient;
 
 
@@ -76,5 +77,9 @@ getspace global_getspace[100];
 setspace global_setspace[100];
 void init_global();
 singleClient* single_connect(int port,const char* ip);
+void pipe_set(singleClient*sc, char*key, char*value);
+void pipe_get(singleClient*sc, char*key);
+void pipe_getReply(singleClient*sc);
+void pipe_getAllReply(singleClient*sc);
 
 #endif

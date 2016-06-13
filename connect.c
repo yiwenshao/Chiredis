@@ -583,6 +583,34 @@ singleClient* single_connect(int port,const char* ip){
 	     printf("succeed in global connecting\n");
 #endif
              sc->singleContext=localContext; 
+	     sc->pipe_count=0;
 	 }
          return sc;
 }
+void pipe_set(singleClient*sc, char*key, char*value){
+    redisAppendCommand(sc->singleContext,"SET %s %s",key,value);
+    sc->pipe_count+=1;
+}
+
+void pipe_get(singleClient*sc,char*key){
+   redisAppendCommand(sc->singleContext,"GET %s ",key);
+   sc->pipe_count+=1;
+}
+void pipe_getReply(singleClient*sc){
+    redisReply * reply;
+    redisGetReply(sc->singleContext,(void**)&reply);
+    sc->pipe_count-=1;
+    printf("%s\n",reply->str);
+    freeReplyObject(reply);
+}
+void pipe_getAllReply(singleClient*sc){
+    int i=0;
+    int max=sc->pipe_count;
+    redisReply * reply;
+    for(;i<max;i++){
+        redisGetReply(sc->singleContext,(void **)&reply);
+	printf("%s\n",reply->str);
+    }
+    freeReplyObject(reply);
+}
+
