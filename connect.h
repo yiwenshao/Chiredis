@@ -24,6 +24,12 @@ typedef struct clusterInfo{
     redisContext* globalContext;
 }clusterInfo;
 
+typedef struct singleClient{
+    redisContext* singleContext;
+    int port;
+    const char* ip;
+}singleClient;
+
 
 clusterInfo* connectRedis(char*ip,int port);
 int set(clusterInfo* cluster,const char *key, char *set_in_value,int dunum,int tid);
@@ -68,7 +74,7 @@ typedef struct setspace{
 //get and set operation can use this global buffer 
 getspace global_getspace[100];
 setspace global_setspace[100];
-
 void init_global();
+singleClient* single_connect(int port,const char* ip);
 
 #endif

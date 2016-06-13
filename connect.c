@@ -58,6 +58,7 @@ clusterInfo* __connect_cluster(char* ip, int port){
 	     printf("succeed in global connecting\n");
 #endif
 	 }
+
 	 
 	clusterInfo* cluster = __clusterInfo(localContext);
 
@@ -560,4 +561,28 @@ void init_global(){
      }
 }
 
-
+singleClient* single_connect(int port,const char* ip){
+      singleClient* sc = (singleClient*)malloc(sizeof(singleClient));
+      sc->port=port;
+      sc->ip = ip;
+      
+      redisContext* localContext = redisConnect(ip,port);
+	 if(localContext==NULL || localContext->err){
+	     if(localContext!=NULL){
+                  printf("single global connection error %s %d %s\n",\
+		                localContext->errstr,__LINE__,__FILE__);
+	          redisFree(localContext);
+		  return NULL;
+	       }else{
+	          printf("can not allocate global context %d %s",\
+		                                  __LINE__,__FILE__);
+		  return NULL;
+	       }
+	 }else{
+#ifdef DEBUG	 
+	     printf("succeed in global connecting\n");
+#endif
+             sc->singleContext=localContext; 
+	 }
+         return sc;
+}
