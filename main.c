@@ -140,55 +140,50 @@ void *db_bench(void* input){
   disconnectDatabase(cluster);
 
 }
+
 void test_with_multiple_threads(){
  pthread_t th[16];
  int res, i;
  init_global();
  void* thread_result;
  int thread[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-
  for(i=0;i<16;i++){ 
    res = pthread_create(&th[i],NULL,db_bench,(void*)(&thread[i]));
    if(res!=0){
       printf("thread fail\n");
       break;
    }
-  }
-
+ }
  for(i=0;i<16;i++){ 
    res = pthread_join(th[i],&thread_result);
    if(res!=0){
       printf("thread join fail\n");
       break;
-   }
+     }
   }
 }
 
+void single_pipe_bench(char* filename,int num){
+     int port=6379;
+     char* ip="127.0.0.1";
+     singleClient* sc = single_connect(port,ip); 
+
+     if(freopen(filename,"r",stdin)==NULL){
+         fprintf(stderr,"error redirection\n");
+     }
+     char* key=(char*)malloc(500);
+     char* value=(char*)malloc(500);
+     int i;
+     for(i=0;i<num;i++){
+         scanf("%s %s",key,value);
+         pipe_set(sc,key,value);
+	 pipe_get(sc,key);
+     }
+     pipe_getAllReply(sc);
+}
+
 int main(){
- init_global();
-// test_with_multiple_threads();
-
-  char * ip = "115.29.113.239";
-  int port = 5674;
-  clusterInfo *cluster = connectRedis(ip,port);
-  if(cluster == NULL){
-     printf("unable to connect\n");
-     return 0;
-  }
-  
-  char* key = (char*)malloc(100);
-  char* value = (char*)malloc(100);
-  sprintf(key,"%s","mykeynow");
-  sprintf(value,"%s","myvaluenow");
-
-  set(cluster,key,value,0,0);
-  int g=get(cluster,key,value,0,0);
-
-  printf("get result=%d, value=%s\n",g,value);
-
-  flushDb(cluster);
-  disconnectDatabase(cluster);
-
-
+ single_pipe_bench("single",100);
  return 0;
+
 }

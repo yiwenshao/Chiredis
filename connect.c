@@ -587,14 +587,17 @@ singleClient* single_connect(int port,const char* ip){
 	 }
          return sc;
 }
+
 void pipe_set(singleClient*sc, char*key, char*value){
     redisAppendCommand(sc->singleContext,"SET %s %s",key,value);
     sc->pipe_count+=1;
+
 }
 
 void pipe_get(singleClient*sc,char*key){
    redisAppendCommand(sc->singleContext,"GET %s ",key);
    sc->pipe_count+=1;
+
 }
 void pipe_getReply(singleClient*sc){
     redisReply * reply;
@@ -603,6 +606,7 @@ void pipe_getReply(singleClient*sc){
     printf("%s\n",reply->str);
     freeReplyObject(reply);
 }
+
 void pipe_getAllReply(singleClient*sc){
     int i=0;
     int max=sc->pipe_count;
@@ -610,7 +614,7 @@ void pipe_getAllReply(singleClient*sc){
     for(;i<max;i++){
         redisGetReply(sc->singleContext,(void **)&reply);
 	printf("%s\n",reply->str);
+	sc->pipe_count-=1;
     }
     freeReplyObject(reply);
 }
-

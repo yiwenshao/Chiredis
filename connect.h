@@ -81,5 +81,6 @@ void pipe_set(singleClient*sc, char*key, char*value);
 void pipe_get(singleClient*sc, char*key);
 void pipe_getReply(singleClient*sc);
 void pipe_getAllReply(singleClient*sc);
+void single_disconnect(singleClient* sc);
 
 #endif
