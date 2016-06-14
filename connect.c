@@ -599,16 +599,18 @@ void pipe_get(singleClient*sc,char*key){
    sc->pipe_count+=1;
 
 }
-void pipe_getReply(singleClient*sc){
+void pipe_getReply(singleClient*sc,char * revalue){
     if(sc->pipe_count==0){
         puts("pipe_count=0!\n");
         return;
     }
+
     redisReply * reply;
     redisGetReply(sc->singleContext,(void**)&reply);
     switch(reply->type){
        case REDIS_REPLY_STATUS:
-           puts(reply->str);
+           sprintf(revalue,"%s",reply->str);
+           //puts(reply->str);
            break;
        case REDIS_REPLY_ERROR:
 
@@ -617,10 +619,12 @@ void pipe_getReply(singleClient*sc){
 
           break;
        case REDIS_REPLY_NIL:
-          puts("nil");
+          //puts("nil");
+	  sprintf(revalue,"%s","nil");
           break; 
        case REDIS_REPLY_STRING:
-          puts(reply->str);
+          sprintf(revalue,"%s",reply->str);
+          //puts(reply->str);
           break;
        case REDIS_REPLY_ARRAY:
           break;
@@ -628,7 +632,8 @@ void pipe_getReply(singleClient*sc){
           printf("check reply error %d %s",__LINE__,__FILE__);
       }
     sc->pipe_count-=1;
-    printf("%s\n",reply->str);
+    //printf("%s\n",reply->str);
+    //sprintf(revalue,"%s",reply->str);
     freeReplyObject(reply);
 }
 
@@ -640,7 +645,7 @@ void pipe_getAllReply(singleClient*sc){
      redisGetReply(sc->singleContext,(void **)&reply);
      switch(reply->type){
      case REDIS_REPLY_STATUS:
-          puts(reply->str);
+          //printf("%c\n",reply->str[0]);
           break;
      case REDIS_REPLY_ERROR:
 
@@ -652,7 +657,7 @@ void pipe_getAllReply(singleClient*sc){
           puts("nil");
           break; 
      case REDIS_REPLY_STRING:
-          puts(reply->str);
+          //printf("%c\n",reply->str[0]);
           break;
      case REDIS_REPLY_ARRAY:
           break;

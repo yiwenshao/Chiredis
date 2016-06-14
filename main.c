@@ -163,30 +163,90 @@ void test_with_multiple_threads(){
   }
 }
 
-void single_pipe_bench(char* filename,int num){
+void single_pipe_bench_set(char* filename,int num){
      int port=6379;
      char* ip="127.0.0.1";
+     FILE* fp;
      singleClient* sc = single_connect(port,ip); 
 
-     if(freopen(filename,"r",stdin)==NULL){
+     if(fp=freopen(filename,"r",stdin)==NULL){
          fprintf(stderr,"error redirection\n");
      }
      char* key=(char*)malloc(500);
      char* value=(char*)malloc(500);
      int i;
-     for(i=0;i<num;i++){
-         scanf("%s %s",key,value);
-         pipe_set(sc,key,value);
-	 pipe_get(sc,key);
+     int pipe_len=16;
+     time_t now,then;
+     now = time(0);
+     while(num>0){
+          for(i=0;i<pipe_len;i++){
+             scanf("%s %s",key,value);
+             pipe_set(sc,key,value);
+         }
+         pipe_getAllReply(sc);
+	 num-=pipe_len;
      }
-     pipe_getAllReply(sc);
-
+     then = time(0);
+     printf("time taken: %lld\n",then - now);
      single_disconnect(sc);
-
+     //fclose(fp); no need.
 }
+void single_pipe_bench_get(char* filename,int num){
+     int port=6379;
+     char* ip="127.0.0.1";
+     FILE* fp;
+     singleClient* sc = single_connect(port,ip);
+     if(fp=freopen(filename,"r",stdin)==NULL){
+         fprintf(stderr,"error redirection\n");
+     }
+     char* key=(char*)malloc(500);
+     char* value=(char*)malloc(500);
+     int i;
+     int pipe_len=16;
+     time_t now,then;
+     now = time(0);
+     while(num>0){
+          for(i=0;i<pipe_len;i++){
+             scanf("%s %s",key,value);
+             pipe_get(sc,key);
+         }
+         pipe_getAllReply(sc);
+	 num-=pipe_len;
+     }
+     then = time(0);
+     printf("time taken: %lld \n",then - now);
+     single_disconnect(sc);
+     //fclose(fp);no need
+}
+void pipe_example(char* filename){
+     int port=6379;
+     char* ip="127.0.0.1";
+     FILE* fp;
+     singleClient* sc = single_connect(port,ip);
+     if(fp=freopen(filename,"r",stdin)==NULL){
+         fprintf(stderr,"error redirection\n");
+     }
+     char* key=(char*)malloc(500);
+     char* value=(char*)malloc(500);
+     char* revalue=(char*)malloc(500);
 
+     pipe_set(sc,"testk","testv");
+     pipe_set(sc,"testk1","testv1");
+     pipe_get(sc,"testk");
+     pipe_get(sc,"testk1");
+
+     pipe_getReply(sc,revalue);
+     puts(revalue);
+     pipe_getReply(sc,revalue);
+     puts(revalue);
+     pipe_getReply(sc,revalue);
+     puts(revalue);
+     pipe_getReply(sc,revalue);
+     puts(revalue);
+}
 int main(){
- single_pipe_bench("single",100);
+ //single_pipe_bench_set("/mnt/ram/single",100000);
+ pipe_example("/mnt/ram/single");
  return 0;
 
 }

@@ -79,7 +79,7 @@ void init_global();
 singleClient* single_connect(int port,const char* ip);
 void pipe_set(singleClient*sc, char*key, char*value);
 void pipe_get(singleClient*sc, char*key);
-void pipe_getReply(singleClient*sc);
+void pipe_getReply(singleClient*sc,char* revalue);
 void pipe_getAllReply(singleClient*sc);
 void single_disconnect(singleClient* sc);
 

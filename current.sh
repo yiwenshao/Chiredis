@@ -4,7 +4,7 @@ do
     pre=${pre}a
 done
 
-for((i=0;i<500;i++))
+for((i=0;i<6000000;i++))
 do
    echo key$i value${i}${pre} >> single
 done
