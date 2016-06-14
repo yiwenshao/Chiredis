@@ -180,6 +180,9 @@ void single_pipe_bench(char* filename,int num){
 	 pipe_get(sc,key);
      }
      pipe_getAllReply(sc);
+
+     single_disconnect(sc);
+
 }
 
 int main(){
