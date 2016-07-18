@@ -275,6 +275,6 @@ void pipe_example(char* filename){
 int main(){
  init_global();
  int a = 0;
- db_function("192.168.0.5",6683,&a);
+ db_function("192.168.0.5",6687,&a);
  return 0;
 }
