@@ -4,27 +4,34 @@
 #include<time.h>
 
 /*
-*"value" is a char* type global variable which is used to hold value.
-*It can be used in either get or set operation.
+"value" is a char* type global variable which is used to hold value.
+It can be used in either get or set operation.
+para1:
+para2:
+para3: thread id
 */
-void *db_function(void* input){
-  char * ip = "192.168.2.11";
-  int port = 7011;
+void *db_function(char* ip_in,int port_in,void* input){
+  char * ip = ip_in;
+  int port = port_in;
   printf("thread=%d\n",*(int*)input);
   int my_tid = *(int*)input;
   /*
   *each thread has its own value and cluster struct.
   */
   char*  value = (char*)malloc(1024*8); 
+  char*  key = (char*)malloc(100);
   clusterInfo *cluster = connectRedis(ip,port);
+
   if(cluster!=NULL){
-  	//printf("!=null\n");
+      printf("connected to cluster\n");
   }
-  else printf("==null\n");
+  else{ 
+  	printf("==null\n");
+	exit(0);
+  }
 
   int sum = 0;
-  char* key = (char*)malloc(100);
-
+ 
   sprintf(key,"key=%d",*((int*)input));
 
   sum += set(cluster,key,"aaaaa",1,my_tid);
@@ -54,7 +61,9 @@ void *db_function(void* input){
 
 /*
 *try to write a small benchmark using timeval.
+*this function is used in multi-threading environment.
 */
+/*
 void *db_bench(void* input){
   FILE * time_file;
  
@@ -140,7 +149,8 @@ void *db_bench(void* input){
   disconnectDatabase(cluster);
 
 }
-
+*/
+/*
 void test_with_multiple_threads(){
  pthread_t th[16];
  int res, i;
@@ -162,7 +172,9 @@ void test_with_multiple_threads(){
      }
   }
 }
+*/
 
+//********************************************************
 void single_pipe_bench_set(char* filename,int num){
      int port=6379;
      char* ip="127.0.0.1";
@@ -191,6 +203,10 @@ void single_pipe_bench_set(char* filename,int num){
      single_disconnect(sc);
      //fclose(fp); no need.
 }
+
+
+//use single_pipe_bench_set("/mnt/ram/single",100000) in main to
+//do the test.
 void single_pipe_bench_get(char* filename,int num){
      int port=6379;
      char* ip="127.0.0.1";
@@ -216,8 +232,10 @@ void single_pipe_bench_get(char* filename,int num){
      then = time(0);
      printf("time taken: %lld \n",then - now);
      single_disconnect(sc);
-     //fclose(fp);no need
 }
+//*****************************************************************
+
+//use pipe_example("/mnt/ram/single") in main to do the test
 void pipe_example(char* filename){
      int port=6379;
      char* ip="127.0.0.1";
@@ -244,9 +262,10 @@ void pipe_example(char* filename){
      pipe_getReply(sc,revalue);
      puts(revalue);
 }
-int main(){
- //single_pipe_bench_set("/mnt/ram/single",100000);
- pipe_example("/mnt/ram/single");
- return 0;
 
+//******************************************************************
+
+int main(){
+
+ return 0;
 }
