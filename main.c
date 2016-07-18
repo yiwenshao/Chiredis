@@ -34,19 +34,26 @@ void *db_function(char* ip_in,int port_in,void* input){
  
   sprintf(key,"key=%d",*((int*)input));
 
-  sum += set(cluster,key,"aaaaa",1,my_tid);
+  sprintf(value,"%s","aaaaa");
+
+  sum += set(cluster,key,value,1,my_tid);
   sum += get(cluster,key,value,1,my_tid);
   printf("get %s: %s\n",key,value);
 
-  sum += set(cluster,key,"fffff",1,my_tid);
+
+  sprintf(value,"%s","ffffff");
+  sum += set(cluster,key,value,1,my_tid);
   sum += get(cluster,key,value,1,my_tid);
   printf("get %s:%s\n",key,value);
 
-  sum += set(cluster,key,"eafde",1,my_tid);
+
+  sprintf(value,"%s","aefde");
+  sum += set(cluster,key,value,1,my_tid);
   sum += get(cluster,key,value,1,my_tid);
   printf("get %s: %s\n",key,value);
 
-  sum += set(cluster,key,"abcde",1,my_tid);
+  sprintf(value,"%s","abcdefads");
+  sum += set(cluster,key,value,1,my_tid);
   sum += get(cluster,key,value,1,my_tid);
   printf("get %s: %s\n",key,value);
   
@@ -54,7 +61,7 @@ void *db_function(char* ip_in,int port_in,void* input){
      printf("all operations succeed!\n");
   else printf("operation fail\n");
 
-  flushDb(cluster);
+  //flushDb(cluster);
   disconnectDatabase(cluster);
   printf("intput = %d\n",*((int*)input)); 
 }
@@ -266,6 +273,8 @@ void pipe_example(char* filename){
 //******************************************************************
 
 int main(){
-
+ init_global();
+ int a = 0;
+ db_function("192.168.0.5",6683,&a);
  return 0;
 }

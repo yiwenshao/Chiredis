@@ -174,13 +174,11 @@ int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int d
 
 	sprintf(localSetKey,"%d\b%s",dbnum,key);
 	int re = __set_nodb(cluster,localSetKey,set_in_value);
-        //free(localSetKey);   
 	global_setspace[localTid].used = 0;
 	return re;
 }
 
 int set(clusterInfo* cluster, const char *key,char *set_in_value,int dbnum,int tid){
-	//__set_nodb(key,value);
 	return __set_withdb(cluster,key,set_in_value,dbnum,tid);
 }
 
