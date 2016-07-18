@@ -1,0 +1,89 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CHECK_REPLY	connect.c	8;"	d	file:
+CONNECT_H	connect.h	2;"	d
+MY_BENCH_H	my_bench.h	2;"	d
+__add_context_to_cluster	connect.c	/^void __add_context_to_cluster(clusterInfo* mycluster){$/;"	f
+__clusterInfo	connect.c	/^clusterInfo* __clusterInfo(redisContext* localContext){$/;"	f
+__connect_cluster	connect.c	/^clusterInfo* __connect_cluster(char* ip, int port){$/;"	f
+__get_nodb	connect.c	/^int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){$/;"	f
+__get_withdb	connect.c	/^int __get_withdb(clusterInfo* cluster, const char* key,\\$/;"	f
+__global_disconnect	connect.c	/^void __global_disconnect(clusterInfo* cluster){$/;"	f
+__remove_context_from_cluster	connect.c	/^void __remove_context_from_cluster(clusterInfo* mycluster){$/;"	f
+__set_nodb	connect.c	/^int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){$/;"	f
+__set_redirect	connect.c	/^void __set_redirect(char* str){$/;"	f
+__set_withdb	connect.c	/^int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid){$/;"	f
+__test_slot	connect.c	/^void __test_slot(clusterInfo* mycluster){$/;"	f
+argv	connect.h	/^    char * argv[50];$/;"	m	struct:clusterInfo
+assign_slot	connect.c	/^void assign_slot(clusterInfo* mycluster){$/;"	f
+benchRecord	my_bench.h	/^typedef struct benchRecord{$/;"	s
+benchRecord	my_bench.h	/^}benchRecord;$/;"	t	typeref:struct:benchRecord
+check_reply	connect.c	/^int check_reply(redisReply* reply){$/;"	f
+closeBenchmark	my_bench.c	/^void closeBenchmark(benchRecord* br){$/;"	f
+clusterInfo	connect.h	/^typedef struct clusterInfo{$/;"	s
+clusterInfo	connect.h	/^}clusterInfo;$/;"	t	typeref:struct:clusterInfo
+connectRedis	connect.c	/^clusterInfo* connectRedis(char* ip, int port){$/;"	f
+context	connect.h	/^    redisContext * context;$/;"	m	struct:parseArgv
+crc16	crc16.c	/^uint16_t crc16(const char *buf, int len){ $/;"	f
+crc16tab	crc16.c	/^static const uint16_t crc16tab[256]= {$/;"	v	file:
+db_function	main.c	/^void *db_function(char* ip_in,int port_in,void* input){$/;"	f
+disconnectDatabase	connect.c	/^void disconnectDatabase(clusterInfo* cluster){$/;"	f
+end_slot	connect.h	/^    int end_slot;$/;"	m	struct:parseArgv
+file_list	process.py	/^  file_list = list()$/;"	v
+flushDb	connect.c	/^int flushDb(clusterInfo* cluster){$/;"	f
+from_str_to_cluster	connect.c	/^void from_str_to_cluster(char * temp, clusterInfo* mycluster){$/;"	f
+get	connect.c	/^int get(clusterInfo* cluster, const char *key, char *get_in_value,int dbnum,int tid){$/;"	f
+getKey	connect.h	/^     char * getKey;$/;"	m	struct:getspace
+getspace	connect.h	/^typedef struct getspace{$/;"	s
+getspace	connect.h	/^}getspace;$/;"	t	typeref:struct:getspace
+globalContext	connect.h	/^    redisContext* globalContext;$/;"	m	struct:clusterInfo
+global_getspace	connect.h	/^getspace global_getspace[100];$/;"	v
+global_setspace	connect.h	/^setspace global_setspace[100];$/;"	v
+init_global	connect.c	/^void init_global(){$/;"	f
+ip	connect.h	/^    char * ip;$/;"	m	struct:parseArgv
+ip	connect.h	/^    const char* ip;$/;"	m	struct:singleClient
+len	connect.h	/^    int len;$/;"	m	struct:clusterInfo
+loadFile	my_bench.c	/^benchRecord* loadFile(char* rfileName,char* wfileName,\\$/;"	f
+main	main.c	/^int main(){$/;"	f
+number	my_bench.h	/^    unsigned long number;$/;"	m	struct:benchRecord
+obj	Makefile	/^obj=main.o connect.o crc16.o my_bench.o$/;"	m
+parse	connect.h	/^    parseArgv* parse[50];$/;"	m	struct:clusterInfo
+parseArgv	connect.h	/^typedef struct parseArgv{$/;"	s
+parseArgv	connect.h	/^}parseArgv;$/;"	t	typeref:struct:parseArgv
+pipe_count	connect.h	/^    int pipe_count;$/;"	m	struct:singleClient
+pipe_example	main.c	/^void pipe_example(char* filename){$/;"	f
+pipe_get	connect.c	/^void pipe_get(singleClient*sc,char*key){$/;"	f
+pipe_getAllReply	connect.c	/^void pipe_getAllReply(singleClient*sc){$/;"	f
+pipe_getReply	connect.c	/^void pipe_getReply(singleClient*sc,char * revalue){$/;"	f
+pipe_set	connect.c	/^void pipe_set(singleClient*sc, char*key, char*value){$/;"	f
+port	connect.h	/^    int port;$/;"	m	struct:parseArgv
+port	connect.h	/^    int port;$/;"	m	struct:singleClient
+print_clusterInfo_parsed	connect.c	/^void print_clusterInfo_parsed(clusterInfo* mycluster){$/;"	f
+process_cluterInfo	connect.c	/^void process_cluterInfo(clusterInfo* mycluster){$/;"	f
+process_one_file	process.py	/^def process_one_file(file_des,file_name):$/;"	f
+readFile	my_bench.h	/^    char* readFile;$/;"	m	struct:benchRecord
+rkey	my_bench.h	/^    char** rkey;$/;"	m	struct:benchRecord
+rvalue	my_bench.h	/^    char** rvalue;$/;"	m	struct:benchRecord
+set	connect.c	/^int set(clusterInfo* cluster, const char *key,char *set_in_value,int dbnum,int tid){$/;"	f
+setKey	connect.h	/^     char* setKey;$/;"	m	struct:setspace
+setspace	connect.h	/^typedef struct setspace{$/;"	s
+setspace	connect.h	/^}setspace;$/;"	t	typeref:struct:setspace
+singleClient	connect.h	/^typedef struct singleClient{$/;"	s
+singleClient	connect.h	/^}singleClient;$/;"	t	typeref:struct:singleClient
+singleContext	connect.h	/^    redisContext* singleContext;$/;"	m	struct:singleClient
+single_connect	connect.c	/^singleClient* single_connect(int port,const char* ip){$/;"	f
+single_disconnect	connect.c	/^void single_disconnect(singleClient* sc){$/;"	f
+single_pipe_bench_get	main.c	/^void single_pipe_bench_get(char* filename,int num){$/;"	f
+single_pipe_bench_set	main.c	/^void single_pipe_bench_set(char* filename,int num){$/;"	f
+slot_to_host	connect.h	/^    void * slot_to_host[16384];$/;"	m	struct:clusterInfo
+slots	connect.h	/^    char slots[16384];$/;"	m	struct:parseArgv
+start_slot	connect.h	/^    int start_slot;$/;"	m	struct:parseArgv
+used	connect.h	/^     int used;$/;"	m	struct:getspace
+used	connect.h	/^     int used;$/;"	m	struct:setspace
+wkey	my_bench.h	/^    char** wkey;$/;"	m	struct:benchRecord
+writeFile	my_bench.h	/^    char* writeFile;$/;"	m	struct:benchRecord
+wvalue	my_bench.h	/^    char** wvalue;$/;"	m	struct:benchRecord

@@ -58,7 +58,6 @@ clusterInfo* __connect_cluster(char* ip, int port){
 	     printf("succeed in global connecting\n");
 #endif
 	 }
-
 	 
 	clusterInfo* cluster = __clusterInfo(localContext);
 
@@ -392,9 +391,11 @@ void print_clusterInfo_parsed(clusterInfo* mycluster){
 *command cluster nodes will return a str, which fall into n parts, one for each node in the 
 *cluster. this function add the strs to argv in clusterInfo struct, and set mycluster->len, which
 *is the number of nodes in the cluster.
+*current version only support at most 50 masters in a cluster and it just ignore slaves.
+*
 */
 void from_str_to_cluster(char * temp, clusterInfo* mycluster){
-    char * argv[50];
+    char * argv[500];
     int count = 0;
     char* point;
     int copy_len = 0;
@@ -424,6 +425,7 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster){
     mycluster->len = count;
 }
 
+//only for testing purposes
 void __test_slot(clusterInfo* mycluster){
     int slot[] = {0,5460,5461,10922,10923,16383};
     int len = sizeof(slot) / sizeof(int);
@@ -484,6 +486,7 @@ void __add_context_to_cluster(clusterInfo* mycluster){
 }
 
 
+
 void __remove_context_from_cluster(clusterInfo* mycluster){
    int len = mycluster-> len;
    int i = 0;
@@ -499,16 +502,6 @@ void __remove_context_from_cluster(clusterInfo* mycluster){
 #endif 
 }
 
-
-void disconnectDatabase(clusterInfo* cluster){
-    __global_disconnect(cluster);
-    __remove_context_from_cluster(cluster);
-}
-
-/*
-*
-*The global context is used to inquery cluster information
-*/
 void __global_disconnect(clusterInfo* cluster){
      if(cluster->globalContext !=NULL)
      redisFree(cluster->globalContext);
@@ -517,8 +510,16 @@ void __global_disconnect(clusterInfo* cluster){
 #endif
 }
 
+void disconnectDatabase(clusterInfo* cluster){
+    __global_disconnect(cluster);
+    __remove_context_from_cluster(cluster);
+}
+
+
+
 /*
-*Flushdb command. 0 means the command succeed, otherwise fail.
+*Flushdb command. 0 means the command succeed, otherwise fail, used only for cluster mode.
+*
 */
 int flushDb(clusterInfo* cluster){
     redisContext *c = NULL;
@@ -545,9 +546,10 @@ int flushDb(clusterInfo* cluster){
     if(i == len) return 0;
     else return -1;
 }
+
 /*
-*init global space for getKey and set key
-*
+*init global space for getKey and set key, this function must be called only once before
+*any operations on the redis cluster.
 */
 void init_global(){
      int i;
@@ -586,17 +588,21 @@ singleClient* single_connect(int port,const char* ip){
          return sc;
 }
 
+//pipeline get command
 void pipe_set(singleClient*sc, char*key, char*value){
     redisAppendCommand(sc->singleContext,"SET %s %s",key,value);
     sc->pipe_count+=1;
 
 }
 
+//pipeline set command
 void pipe_get(singleClient*sc,char*key){
    redisAppendCommand(sc->singleContext,"GET %s ",key);
    sc->pipe_count+=1;
 
 }
+
+//pipeline getReply
 void pipe_getReply(singleClient*sc,char * revalue){
     if(sc->pipe_count==0){
         puts("pipe_count=0!\n");
@@ -635,6 +641,7 @@ void pipe_getReply(singleClient*sc,char * revalue){
     freeReplyObject(reply);
 }
 
+//pipeline get all replies based on the count value
 void pipe_getAllReply(singleClient*sc){
     int i=0;
     int max=sc->pipe_count;
@@ -669,6 +676,7 @@ void pipe_getAllReply(singleClient*sc){
         puts("sc pipe count error\n");
 }
 
+//pipeline client
 void single_disconnect(singleClient* sc){
      redisFree(sc->singleContext);
      free(sc);

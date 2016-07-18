@@ -75,6 +75,8 @@ typedef struct setspace{
 //get and set operation can use this global buffer 
 getspace global_getspace[100];
 setspace global_setspace[100];
+
+
 void init_global();
 singleClient* single_connect(int port,const char* ip);
 void pipe_set(singleClient*sc, char*key, char*value);
