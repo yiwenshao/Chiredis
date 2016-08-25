@@ -10,9 +10,9 @@ void *__db_function(void* thread_struct);
 *input: add any valid filename
 *
 */
-void pipe_example (char* filename) {
-     int port=6379;
-     char* ip="127.0.0.1";
+void pipe_example (char* in_ip, int in_port, char* filename) {
+     int port=in_port;
+     char* ip=in_ip;
      FILE* fp;
      singleClient* sc = single_connect(port,ip);
      if((fp=freopen(filename,"a",stdin))==NULL){
@@ -36,8 +36,6 @@ void pipe_example (char* filename) {
      pipe_getReply(sc,revalue);
      puts(revalue);
 }
-
-
 
 /*
 

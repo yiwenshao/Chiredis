@@ -35,9 +35,8 @@ void single_pipe_bench_set(char* filename,int num){
 
 int main(){
 //init_global();
-//pass the test for pipe_example
-//pipe_example("now");
- test_with_multiple_threads("192.168.1.21",6667);
+  pipe_example("192.168.1.21",6379,"now");
+//test_with_multiple_threads("192.168.1.21",6667);
 
  return 0;
 }
