@@ -606,7 +606,7 @@ void pipe_get(singleClient*sc,char*key){
 void pipe_getReply(singleClient*sc,char * revalue){
     if(sc->pipe_count==0){
         puts("pipe_count=0!\n");
-        return;
+        //return;
     }
 
     redisReply * reply;

@@ -21,14 +21,17 @@ void pipe_example (char* in_ip, int in_port, char* filename) {
      char* key=(char*)malloc(500);
      char* value=(char*)malloc(500);
      char* revalue=(char*)malloc(500);
+     puts("hehe");
 
+     pipe_getReply(sc,revalue);
      pipe_set(sc,"testk","testv");
-     pipe_set(sc,"testk1","testv1");
+     pipe_set(sc,"testk1","testv1");     
+
+     puts(revalue);
+
      pipe_get(sc,"testk");
      pipe_get(sc,"testk1");
 
-     pipe_getReply(sc,revalue);
-     puts(revalue);
      pipe_getReply(sc,revalue);
      puts(revalue);
      pipe_getReply(sc,revalue);
