@@ -605,8 +605,8 @@ void pipe_get(singleClient*sc,char*key){
 //pipeline getReply
 void pipe_getReply(singleClient*sc,char * revalue){
     if(sc->pipe_count==0){
-        puts("pipe_count=0!\n");
-        //return;
+        puts("pipe_count=0,should not get here!\n");
+        return;
     }
 
     redisReply * reply;
@@ -636,8 +636,7 @@ void pipe_getReply(singleClient*sc,char * revalue){
           printf("check reply error %d %s",__LINE__,__FILE__);
       }
     sc->pipe_count-=1;
-    //printf("%s\n",reply->str);
-    //sprintf(revalue,"%s",reply->str);
+
     freeReplyObject(reply);
 }
 
