@@ -9,5 +9,7 @@ crc16.o: crc16.c crc16.h
 	gcc -c crc16.c
 my_bench.o: my_bench.c my_bench.h
 	gcc -c my_bench.c
+
+.PHONY: clean
 clean:
 	rm *.o main
