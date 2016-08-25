@@ -1,63 +1,37 @@
 #include"my_bench.h"
+#include"connect.h"
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
-benchRecord* loadFile(char* rfileName,char* wfileName,\
-                                           unsigned long num){
-    benchRecord* myload = (benchRecord*)malloc(sizeof(benchRecord));
-    if(freopen(rfileName,"r",stdin)==NULL){
-        puts("error freopen\n");
-	return NULL;
-    }
-    myload->readFile=rfileName;
-    myload->writeFile=wfileName;
-    int i;
-    myload->rkey = (char**)malloc(num*sizeof(char*));
-    myload->rvalue = (char**)malloc(num*sizeof(char*));
 
-    myload->wkey = (char**)malloc(num*sizeof(char*));
-    myload->wvalue = (char**)malloc(num*sizeof(char*));
-    
-    myload->number=num;
-    for(i=0;i<num;i++){
-            
-    }
-}    
+/*
+*input: add any valid filename
+*
+*/
+void pipe_example(char* filename){
+     int port=6379;
+     char* ip="127.0.0.1";
+     FILE* fp;
+     singleClient* sc = single_connect(port,ip);
+     if(fp=freopen(filename,"a",stdin)==NULL){
+         fprintf(stderr,"error redirection\n");
+     }
+     char* key=(char*)malloc(500);
+     char* value=(char*)malloc(500);
+     char* revalue=(char*)malloc(500);
 
-void closeBenchmark(benchRecord* br){
-     if(br->readFile!=NULL)
-         free(br->readFile);
-     if(br->writeFile!=NULL)
-         free(br->writeFile);
+     pipe_set(sc,"testk","testv");
+     pipe_set(sc,"testk1","testv1");
+     pipe_get(sc,"testk");
+     pipe_get(sc,"testk1");
 
-     if(br->rkey!=NULL){
-         unsigned long i=0;
-	 for(;i<br->number;i++){
-	      if(br->rkey[i]!=NULL)
-	         free(br->rkey[i]);
-	 }
-     }
-     if(br->rvalue!=NULL){
-         unsigned long i=0;
-	 for(;i<br->number;i++){
-	      if(br->rvalue[i]!=NULL)
-	         free(br->rvalue[i]);
-	 }
-     }
-     if(br->wvalue!=NULL){
-         unsigned long i=0;
-	 for(;i<br->number;i++){
-	      if(br->wvalue[i]!=NULL)
-	         free(br->wvalue[i]);
-	 }
-     }
-     if(br->wkey!=NULL){
-         unsigned long i=0;
-	 for(;i<br->number;i++){
-	      if(br->wkey[i]!=NULL)
-	         free(br->wkey[i]);
-	 }
-     }
-     free(br);
+     pipe_getReply(sc,revalue);
+     puts(revalue);
+     pipe_getReply(sc,revalue);
+     puts(revalue);
+     pipe_getReply(sc,revalue);
+     puts(revalue);
+     pipe_getReply(sc,revalue);
+     puts(revalue);
 }
 
