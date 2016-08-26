@@ -6,7 +6,15 @@
 #include <string.h>
 
 #define CHECK_REPLY
-//#define DEBUG
+
+//the following are a list of internal function that are not intended to be used outsize this file.
+static void __global_disconnect(clusterInfo* cluster);
+static clusterInfo* __connect_cluster(char* ip, int port);
+static clusterInfo* __clusterInfo(redisContext* localContext);
+static void __test_slot(clusterInfo* mycluster);
+static void __add_context_to_cluster(clusterInfo* mycluster);
+
+
 int check_reply(redisReply* reply){
      switch(reply->type){
      case REDIS_REPLY_STATUS:
@@ -31,6 +39,7 @@ int check_reply(redisReply* reply){
           printf("check reply error %d %s",__LINE__,__FILE__);
      }
 }
+
 /*
 *use the globalContext to connect to the host specified by the user;
 *send cluster nodes command through this context;
@@ -39,7 +48,7 @@ int check_reply(redisReply* reply){
 *
 *returns NULL if errors occur
 */
-clusterInfo* __connect_cluster(char* ip, int port){
+static clusterInfo* __connect_cluster(char* ip, int port){
 
      redisContext* localContext = redisConnect(ip,port);
 	 if(localContext==NULL || localContext->err){
@@ -54,9 +63,6 @@ clusterInfo* __connect_cluster(char* ip, int port){
 		  return NULL;
 	       }
 	 }else{
-#ifdef DEBUG	 
-	     printf("succeed in global connecting\n");
-#endif
 	 }
 	 
 	clusterInfo* cluster = __clusterInfo(localContext);
@@ -69,9 +75,11 @@ clusterInfo* __connect_cluster(char* ip, int port){
 	}
 }
 
+
 clusterInfo* connectRedis(char* ip, int port){
      __connect_cluster(ip,port);
 }
+
 
 /*
 *once we meet indirection, this function help parse the information returned
@@ -286,13 +294,11 @@ int get(clusterInfo* cluster, const char *key, char *get_in_value,int dbnum,int 
 *based on the string returned. It does this by calling functions from_str_to_cluster,
 *process_clusterInfo,and addign_slot;
 */
-clusterInfo* __clusterInfo(redisContext* localContext){
+static clusterInfo* __clusterInfo(redisContext* localContext){
     redisContext *c = localContext;
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
     printf("type=%d",r->type);
-#ifdef DEBUG
-    printf("the raw return value = %s\n",r->str);
-#endif
+
     clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
     mycluster->globalContext = localContext;
     from_str_to_cluster(r->str,mycluster);
@@ -394,7 +400,7 @@ void print_clusterInfo_parsed(clusterInfo* mycluster){
 *current version only support at most 50 masters in a cluster and it just ignore slaves.
 *
 */
-void from_str_to_cluster(char * temp, clusterInfo* mycluster){
+void from_str_to_cluster(char * temp, clusterInfo* mycluster) {
     char * argv[500];
     int count = 0;
     char* point;
@@ -426,7 +432,7 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster){
 }
 
 //only for testing purposes
-void __test_slot(clusterInfo* mycluster){
+static void __test_slot(clusterInfo* mycluster){
     int slot[] = {0,5460,5461,10922,10923,16383};
     int len = sizeof(slot) / sizeof(int);
     int i=0;
@@ -502,12 +508,9 @@ void __remove_context_from_cluster(clusterInfo* mycluster){
 #endif 
 }
 
-void __global_disconnect(clusterInfo* cluster){
+static void __global_disconnect(clusterInfo* cluster){
      if(cluster->globalContext !=NULL)
      redisFree(cluster->globalContext);
-#ifdef SUCCESS
-     printf("global context freed\n");
-#endif
 }
 
 void disconnectDatabase(clusterInfo* cluster){
