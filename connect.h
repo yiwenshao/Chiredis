@@ -58,13 +58,10 @@ int get(clusterInfo*cluster, const char *key, char *get_in_value, int dbnum,int 
 int __get_withdb(clusterInfo*cluster, const char* key,char*get_in_value,int dbnum,int tid);
 int __get_nodb(clusterInfo*cluster, const char* key,char* get_in_value);
 
-void __process_cluster_str(char* str);
-
-
 void print_clusterInfo_parsed(clusterInfo* mycluster);
-void process_cluterInfo(clusterInfo* mycluster);
 
-void from_str_to_cluster(char * temp, clusterInfo* mycluster);
+
+
 
 void assign_slot(clusterInfo* mycluster);
 

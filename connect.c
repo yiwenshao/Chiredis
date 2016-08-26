@@ -13,7 +13,8 @@ static clusterInfo* __connect_cluster(char* ip, int port);
 static clusterInfo* __clusterInfo(redisContext* localContext);
 static void __test_slot(clusterInfo* mycluster);
 static void __add_context_to_cluster(clusterInfo* mycluster);
-
+static void __from_str_to_parseArgv(char * temp, clusterInfo* mycluster);
+static void __process_clusterInfo(clusterInfo* mycluster);
 
 int check_reply(redisReply* reply){
      switch(reply->type){
@@ -301,17 +302,22 @@ static clusterInfo* __clusterInfo(redisContext* localContext){
 
     clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
     mycluster->globalContext = localContext;
-    from_str_to_cluster(r->str,mycluster);
-    process_cluterInfo(mycluster);
+
+    __from_str_to_parseArgv(r->str,mycluster);
+    __process_clusterInfo(mycluster);
+
 #ifdef DEBUG
     print_clusterInfo_parsed(mycluster);
 #endif
     assign_slot(mycluster);
+
 #ifdef DEBUG
     __test_slot(mycluster);
 #endif
+
     __add_context_to_cluster(mycluster);
     return mycluster;
+
 }
 
 /*
@@ -319,12 +325,9 @@ static clusterInfo* __clusterInfo(redisContext* localContext){
 *store the information in mycluster->parse[i]. the parse fild are pointers to  parseArgv struct,each
 *node in the cluster has exactly one such struct, which contains infomation such as ip,port,slot,context..
 */
-void process_cluterInfo(clusterInfo* mycluster){
+static void __process_clusterInfo(clusterInfo* mycluster){
     //determine the time of iteration
     int len = mycluster->len;
-#ifdef DEBUG
-    printf("len = %d\n",mycluster->len);
-#endif
     int len_ip=0;
     int len_port=0;
     char* temp;
@@ -397,10 +400,9 @@ void print_clusterInfo_parsed(clusterInfo* mycluster){
 *command cluster nodes will return a str, which fall into n parts, one for each node in the 
 *cluster. this function add the strs to argv in clusterInfo struct, and set mycluster->len, which
 *is the number of nodes in the cluster.
-*current version only support at most 50 masters in a cluster and it just ignore slaves.
-*
+*current version only support at most 500 masters in a cluster and it just ignore slaves.
 */
-void from_str_to_cluster(char * temp, clusterInfo* mycluster) {
+static void __from_str_to_parseArgv(char * temp, clusterInfo* mycluster) {
     char * argv[500];
     int count = 0;
     char* point;
@@ -414,20 +416,20 @@ void from_str_to_cluster(char * temp, clusterInfo* mycluster) {
 	if(strstr(argv[count],"slave")!=NULL){
 	     free(argv[count]);
 	     temp = point+1;
-#ifdef DEBUG
-	     printf("meet slave");
-#endif
 	     continue;
 	}
         argv[count][copy_len-1] = '\0';
         count++;
         temp = point+1;
     }
+
     argv[count] = temp;
+
     int i;
     for(i = 0;i<count;i++){
         mycluster->argv[i] = argv[i];
     }
+
     mycluster->len = count;
 }
 
