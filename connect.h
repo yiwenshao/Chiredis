@@ -11,6 +11,9 @@
 *parseArgv represents one single redis instance in a redis cluster.It's simply a formatted version of one line of the response of cluster nodes
 *
 */
+#define PIPE_OPEN 1
+#define PIPE_CLOSE 0
+
 typedef struct parseArgv{
     //ip address of the redis instance
     char * ip;
@@ -21,8 +24,13 @@ typedef struct parseArgv{
     //the instance have an starting slot and an ending slot.
     int start_slot;
     int end_slot;
+    
     //if slots[i] equals 1, it means this instance owns that slot,otherwise the instance doesn't own the slot.
     char slots[16384];
+    //either be PIPE_OPEN or PIPE_CLOSE 
+    int pipe_mode;
+    //how many replies to get
+    int pipe_pending;
 }parseArgv;
 
 /*
@@ -58,14 +66,9 @@ int get(clusterInfo*cluster, const char *key, char *get_in_value, int dbnum,int 
 int __get_withdb(clusterInfo*cluster, const char* key,char*get_in_value,int dbnum,int tid);
 int __get_nodb(clusterInfo*cluster, const char* key,char* get_in_value);
 
-void print_clusterInfo_parsed(clusterInfo* mycluster);
 
 
 
-
-void assign_slot(clusterInfo* mycluster);
-
-void __remove_context_from_cluster(clusterInfo* mycluster);
 
 void disconnectDatabase(clusterInfo* cluster);
 
@@ -116,5 +119,30 @@ void pipe_get(singleClient*sc, char*key);
 void pipe_getReply(singleClient*sc,char* revalue);
 void pipe_getAllReply(singleClient*sc);
 void single_disconnect(singleClient* sc);
+
+
+/*
+*this structure describes a pipe line transaction.
+*first we set a pipe count, say 16
+*then we begin sending command, and each time we send a command, we increment the cur_index, and fill in the arrays with related info
+*send_slot[cur_index] records the command's slot
+*sending_queue[cur_index] points the the parseArge structure conresponding to the command
+*everytime we can get_reply, we get an redisReply*, and store it in pipe_reply_buffer[cur_index]
+*
+*/
+#define MAX_PIPE_COUNT 100
+typedef struct clusterPipe{
+    int pipe_count;
+    int send_slot[MAX_PIPE_COUNT];
+    int cur_index;
+    parseArgv* sending_queue[MAX_PIPE_COUNT];
+    redisReply* pipe_reply_buffer[MAX_PIPE_COUNT];
+}clusterPipe;
+
+clusterPipe* get_pipeline();
+int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value );
+int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key);
+redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe);
+
 
 #endif

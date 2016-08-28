@@ -12,10 +12,16 @@ static void __global_disconnect(clusterInfo* cluster);
 static clusterInfo* __connect_cluster(char* ip, int port);
 static clusterInfo* __clusterInfo(redisContext* localContext);
 static void __test_slot(clusterInfo* mycluster);
-static void __add_context_to_cluster(clusterInfo* mycluster);
 static void __from_str_to_parseArgv(char * temp, clusterInfo* mycluster);
 static void __process_clusterInfo(clusterInfo* mycluster);
+static void __assign_slots(clusterInfo* mycluster);
+static void __add_context_to_cluster(clusterInfo* mycluster);
+static void __print_clusterInfo_parsed(clusterInfo* mycluster);
+static void __remove_context_from_cluster(clusterInfo* mycluster);
 
+/*
+*for testing purposes
+*/
 int check_reply(redisReply* reply){
      switch(reply->type){
      case REDIS_REPLY_STATUS:
@@ -39,6 +45,11 @@ int check_reply(redisReply* reply){
      default:
           printf("check reply error %d %s",__LINE__,__FILE__);
      }
+}
+
+
+clusterInfo* connectRedis(char* ip, int port){
+     __connect_cluster(ip,port);
 }
 
 /*
@@ -77,9 +88,203 @@ static clusterInfo* __connect_cluster(char* ip, int port){
 }
 
 
-clusterInfo* connectRedis(char* ip, int port){
-     __connect_cluster(ip,port);
+/*
+*This function uses the globle context to send cluster nodes command, and build a clusterInfo
+*based on the string returned. It does this by calling functions from_str_to_cluster,
+*process_clusterInfo,and addign_slot;
+*/
+static clusterInfo* __clusterInfo(redisContext* localContext){
+    redisContext *c = localContext;
+    redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
+    printf("type=%d",r->type);
+
+    clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
+    mycluster->globalContext = localContext;
+
+    __from_str_to_parseArgv(r->str,mycluster);
+    __process_clusterInfo(mycluster);
+
+#ifdef DEBUG
+    __print_clusterInfo_parsed(mycluster);
+#endif
+    __assign_slots(mycluster);
+
+#ifdef DEBUG
+    __test_slot(mycluster);
+#endif
+
+    __add_context_to_cluster(mycluster);
+    return mycluster;
+
 }
+
+/*
+*command cluster nodes will return a str, which fall into n parts, one for each node in the 
+*cluster. this function add the strs to argv in clusterInfo struct, and set mycluster->len, which
+*is the number of nodes in the cluster.
+*current version only support at most 500 masters in a cluster and it just ignore slaves.
+*/
+static void __from_str_to_parseArgv(char * temp, clusterInfo* mycluster) {
+    char * argv[500];
+    int count = 0;
+    char* point;
+    int copy_len = 0;
+
+    while((point=strchr(temp,'\n'))!=NULL){
+        copy_len = point-temp+1;
+        argv[count] = (char*)malloc(copy_len);
+        strncpy(argv[count],temp,copy_len - 1);
+
+	if(strstr(argv[count],"slave")!=NULL){
+	     free(argv[count]);
+	     temp = point+1;
+	     continue;
+	}
+        argv[count][copy_len-1] = '\0';
+        count++;
+        temp = point+1;
+    }
+
+    argv[count] = temp;
+
+    int i;
+    for(i = 0;i<count;i++){
+        mycluster->argv[i] = argv[i];
+    }
+
+    mycluster->len = count;
+}
+/*
+*this function should be called after from_str_to_cluster.It parses the string for each node,and 
+*store the information in mycluster->parse[i]. the parse fild are pointers to  parseArgv struct,each
+*node in the cluster has exactly one such struct, which contains infomation such as ip,port,slot,context..
+*/
+static void __process_clusterInfo(clusterInfo* mycluster){
+    //determine the time of iteration
+    int len = mycluster->len;
+    int len_ip=0;
+    int len_port=0;
+    char* temp;
+    char* ip_start, *port_start, *port_end,*connect_start,*slot_start,*slot_end;
+
+    char* temp_slot_start;
+    char* temp_port;
+
+    int i=0;
+    for(;i<len;i++){
+        temp = ip_start = port_start = port_end = connect_start = slot_start = slot_end = temp_slot_start = temp_port = NULL;
+
+        temp = mycluster->argv[i];
+
+        //parse ip
+        ip_start = strchr(temp,' ');
+        temp = ip_start+1;
+        port_start = strchr(temp,':');
+        temp = port_start+1;
+        port_end = strchr(temp,' ');
+        ip_start++;
+        len_ip = port_start - ip_start;
+        mycluster->parse[i] = (parseArgv*)malloc(sizeof(parseArgv));//do not forget
+        mycluster->parse[i]->ip = (char*)malloc(len_ip + 1);
+
+        strncpy(mycluster->parse[i]->ip,ip_start,len_ip);
+        mycluster->parse[i]->ip[len_ip]='\0';
+
+        //parsePort
+        port_start++;
+        len_port = port_end - port_start;
+        temp_port = (char*)malloc(len_port+1);
+        strncpy(temp_port,port_start,len_port);
+        temp_port[len_port]='\0';
+        mycluster->parse[i]->port = atoi(temp_port);
+
+        connect_start = strstr(port_end,"connected");
+        connect_start = strchr(connect_start,' ');
+
+        slot_start = connect_start+1;
+        slot_end = strchr(slot_start,'-');
+        slot_end++;
+
+        temp_slot_start = (char*)malloc(slot_end-slot_start);
+        strncpy(temp_slot_start,slot_start,slot_end-slot_start-1);
+        temp_slot_start[slot_end-slot_start-1]='\0';
+
+        mycluster->parse[i]->start_slot = atoi(temp_slot_start);
+        mycluster->parse[i]->end_slot = atoi(slot_end);
+
+        free(temp_slot_start);
+    }
+}
+/*
+*print all the information about the cluster fro debuging.
+*/
+static void __print_clusterInfo_parsed(clusterInfo* mycluster){
+    int len = mycluster->len;
+    int i;
+    for(i=0;i<len;i++){
+        printf("node %d info\n",i);
+        printf("original command: %s\n",mycluster->argv[i]);
+        printf("ip: %s, port: %d\n",mycluster->parse[i]->ip,mycluster->parse[i]->port);
+        printf("slot_start= %d, slot_end = %d\n",mycluster->parse[i]->start_slot,\
+	             mycluster->parse[i]->end_slot);
+    }
+}
+
+
+//only for testing purposes
+static void __test_slot(clusterInfo* mycluster){
+    int slot[] = {0,5460,5461,10922,10923,16383};
+    int len = sizeof(slot) / sizeof(int);
+    int i=0;
+    for(i=0;i<len;i++){
+        printf("slot = %d info: ip = %s, port = %d.\n",slot[i],((parseArgv*)mycluster->slot_to_host[slot[i]])->ip, ((parseArgv*)mycluster->slot_to_host[slot[i]])->port);
+    }
+}
+
+
+void __assign_slots(clusterInfo* mycluster){
+    int len = mycluster->len;
+    int i;
+    int count = 0;
+    for(i=0;i<len;i++){
+        int start = mycluster->parse[i]->start_slot;
+        int end = mycluster->parse[i]->end_slot;
+        int j=0;
+	if(sizeof(mycluster->parse[i]->slots)!=16384){
+	     printf("slot != 16384 in __assign_slots\n");
+	     return;
+	} 
+	memset(mycluster->parse[i]->slots,0,16384);
+        for(j=start;j<=end;j++){
+            mycluster->slot_to_host[j] = (void*)(mycluster->parse[i]);
+            count++;
+	    mycluster->parse[i]->slots[i]=1;
+        }
+    }
+}
+
+/*
+*This function give each node in the cluster a context connection
+*/
+void __add_context_to_cluster(clusterInfo* mycluster){
+   int len = mycluster-> len;
+   int i = 0;
+   redisContext * tempContext;
+   
+   for(i=0;i<len;i++){
+       tempContext = redisConnect((mycluster->parse[i])->ip,(mycluster->parse[i])->port);
+       if(tempContext->err){
+          printf("connection refused in __add_contect_to_cluster\n");
+	  printf("refuse ip=%s, port=%d",(mycluster->parse[i])->ip,(mycluster->parse[i])->port);
+	  redisFree(tempContext);
+	  return;
+       }else{
+          (mycluster->parse[i])->context = tempContext;
+       }
+   }
+
+}
+//****we have finished constructing a cluster structure here*****
 
 
 /*
@@ -203,27 +408,24 @@ int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 	redisContext * c = NULL;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
-#ifdef DEBUG
-	printf("slot calculated= %d\n",myslot);
-#endif
+
 	parseArgv* tempArgv = ((parseArgv*)(cluster->slot_to_host[myslot]));
+
 	if(tempArgv->slots[myslot]!=1){
-#ifdef DEBUG
-	    printf("slot error in set // connect.c\n");
-#endif
             //ignore this error currently
 	}
+
 	if(tempArgv->context == NULL){
 	    //this error can not be ignored
 	    printf("context = NULL in function set\n");
 	    strcpy(get_in_value,"conext ==NULL");
 	    return -1;
 	}
+
 	c = tempArgv->context;
+
 	redisReply *r = (redisReply *)redisCommand(c, "get %s", key);
-#ifdef DEBUG
-	printf("type: %d\n", r->type);
-#endif
+
 	if (r->type == REDIS_REPLY_STRING) {
 #ifdef DEBUG
 		printf("%s = %s\n", key, r->str);
@@ -238,9 +440,6 @@ int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 		return 0;
 	} else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
 		freeReplyObject(r);
-#ifdef DEBUG
-		printf("get still need redirection  %s\n",r->str);
-#endif
 		strcpy(get_in_value,"redirection");
 		return -1;
 	} else {
@@ -266,10 +465,11 @@ int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 int __get_withdb(clusterInfo* cluster, const char* key,\
                             char* get_in_value,int dbnum,int tid){
         int localTid = tid%99;
-	if (localTid <0){
+	if (localTid <0) {
 	    printf("local tid error\n");
 	    return -1;
 	}
+
 	if(global_getspace[localTid].used == 1){
 	     printf("global get space used error\n");
 	     return -1;
@@ -279,223 +479,19 @@ int __get_withdb(clusterInfo* cluster, const char* key,\
 
 	sprintf(localGetKey,"%d\b%s",dbnum,key);
 	int re = __get_nodb(cluster,localGetKey,get_in_value);
-	//free(localGetKey);
 	global_getspace[localTid].used = 0;
 	return re;
 }
 
 
 int get(clusterInfo* cluster, const char *key, char *get_in_value,int dbnum,int tid){
-       //__get_nodb(key,value);
       return  __get_withdb(cluster,key,get_in_value,dbnum,tid);
 }
 
-/*
-*This function uses the globle context to send cluster nodes command, and build a clusterInfo
-*based on the string returned. It does this by calling functions from_str_to_cluster,
-*process_clusterInfo,and addign_slot;
-*/
-static clusterInfo* __clusterInfo(redisContext* localContext){
-    redisContext *c = localContext;
-    redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
-    printf("type=%d",r->type);
-
-    clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
-    mycluster->globalContext = localContext;
-
-    __from_str_to_parseArgv(r->str,mycluster);
-    __process_clusterInfo(mycluster);
-
-#ifdef DEBUG
-    print_clusterInfo_parsed(mycluster);
-#endif
-    assign_slot(mycluster);
-
-#ifdef DEBUG
-    __test_slot(mycluster);
-#endif
-
-    __add_context_to_cluster(mycluster);
-    return mycluster;
-
-}
-
-/*
-*this function should be called after from_str_to_cluster.It parses the string for each node,and 
-*store the information in mycluster->parse[i]. the parse fild are pointers to  parseArgv struct,each
-*node in the cluster has exactly one such struct, which contains infomation such as ip,port,slot,context..
-*/
-static void __process_clusterInfo(clusterInfo* mycluster){
-    //determine the time of iteration
-    int len = mycluster->len;
-    int len_ip=0;
-    int len_port=0;
-    char* temp;
-    char* ip_start, *port_start, *port_end,*connect_start,*slot_start,*slot_end;
-
-    char* temp_slot_start;
-    char* temp_port;
-
-    int i=0;
-    for(;i<len;i++){
-        temp = ip_start = port_start = port_end = connect_start = slot_start = slot_end = temp_slot_start = temp_port = NULL;
-
-        temp = mycluster->argv[i];
-
-        //parse ip
-        ip_start = strchr(temp,' ');
-        temp = ip_start+1;
-        port_start = strchr(temp,':');
-        temp = port_start+1;
-        port_end = strchr(temp,' ');
-        ip_start++;
-        len_ip = port_start - ip_start;
-        mycluster->parse[i] = (parseArgv*)malloc(sizeof(parseArgv));//do not forget
-        mycluster->parse[i]->ip = (char*)malloc(len_ip + 1);
-
-        strncpy(mycluster->parse[i]->ip,ip_start,len_ip);
-        mycluster->parse[i]->ip[len_ip]='\0';
-
-        //parsePort
-        port_start++;
-        len_port = port_end - port_start;
-        temp_port = (char*)malloc(len_port+1);
-        strncpy(temp_port,port_start,len_port);
-        temp_port[len_port]='\0';
-        mycluster->parse[i]->port = atoi(temp_port);
-
-        connect_start = strstr(port_end,"connected");
-        connect_start = strchr(connect_start,' ');
-
-        slot_start = connect_start+1;
-        slot_end = strchr(slot_start,'-');
-        slot_end++;
-
-        temp_slot_start = (char*)malloc(slot_end-slot_start);
-        strncpy(temp_slot_start,slot_start,slot_end-slot_start-1);
-        temp_slot_start[slot_end-slot_start-1]='\0';
-
-        mycluster->parse[i]->start_slot = atoi(temp_slot_start);
-        mycluster->parse[i]->end_slot = atoi(slot_end);
-
-        free(temp_slot_start);
-    }
-}
-/*
-*print all the information about the cluster fro debuging.
-*/
-void print_clusterInfo_parsed(clusterInfo* mycluster){
-    int len = mycluster->len;
-    int i;
-    for(i=0;i<len;i++){
-        printf("node %d info\n",i);
-        printf("original command: %s\n",mycluster->argv[i]);
-        printf("ip: %s, port: %d\n",mycluster->parse[i]->ip,mycluster->parse[i]->port);
-        printf("slot_start= %d, slot_end = %d\n",mycluster->parse[i]->start_slot,\
-	             mycluster->parse[i]->end_slot);
-    }
-}
-
-/*
-*command cluster nodes will return a str, which fall into n parts, one for each node in the 
-*cluster. this function add the strs to argv in clusterInfo struct, and set mycluster->len, which
-*is the number of nodes in the cluster.
-*current version only support at most 500 masters in a cluster and it just ignore slaves.
-*/
-static void __from_str_to_parseArgv(char * temp, clusterInfo* mycluster) {
-    char * argv[500];
-    int count = 0;
-    char* point;
-    int copy_len = 0;
-
-    while((point=strchr(temp,'\n'))!=NULL){
-        copy_len = point-temp+1;
-        argv[count] = (char*)malloc(copy_len);
-        strncpy(argv[count],temp,copy_len - 1);
-
-	if(strstr(argv[count],"slave")!=NULL){
-	     free(argv[count]);
-	     temp = point+1;
-	     continue;
-	}
-        argv[count][copy_len-1] = '\0';
-        count++;
-        temp = point+1;
-    }
-
-    argv[count] = temp;
-
-    int i;
-    for(i = 0;i<count;i++){
-        mycluster->argv[i] = argv[i];
-    }
-
-    mycluster->len = count;
-}
-
-//only for testing purposes
-static void __test_slot(clusterInfo* mycluster){
-    int slot[] = {0,5460,5461,10922,10923,16383};
-    int len = sizeof(slot) / sizeof(int);
-    int i=0;
-    for(i=0;i<len;i++){
-        printf("slot = %d info: ip = %s, port = %d.\n",slot[i],((parseArgv*)mycluster->slot_to_host[slot[i]])->ip, ((parseArgv*)mycluster->slot_to_host[slot[i]])->port);
-    }
-}
-
-
-void assign_slot(clusterInfo* mycluster){
-    int len = mycluster->len;
-    int i;
-    int count = 0;
-    for(i=0;i<len;i++){
-        int start = mycluster->parse[i]->start_slot;
-        int end = mycluster->parse[i]->end_slot;
-        int j=0;
-	if(sizeof(mycluster->parse[i]->slots)!=16384){
-	     printf("slot != 16384 in assign_slot\n");
-	     return;
-	} 
-	memset(mycluster->parse[i]->slots,0,16384);
-
-        for(j=start;j<=end;j++){
-            mycluster->slot_to_host[j] = (void*)(mycluster->parse[i]);
-            count++;
-	    mycluster->parse[i]->slots[i]=1;
-        }
-    }
-#ifdef DEBUG
-    printf("count = %d \n",count);
-#endif
-}
-
-/*
-*This function give each node in the cluster a context connection
-*/
-void __add_context_to_cluster(clusterInfo* mycluster){
-   int len = mycluster-> len;
-   int i = 0;
-   redisContext * tempContext;
-   
-   for(i=0;i<len;i++){
-       tempContext = redisConnect((mycluster->parse[i])->ip,(mycluster->parse[i])->port);
-       if(tempContext->err){
-          printf("connection refused in __add_contect_to_cluster\n");
-	  printf("refuse ip=%s, port=%d",(mycluster->parse[i])->ip,(mycluster->parse[i])->port);
-	  redisFree(tempContext);
-	  return;
-       }else{
-          (mycluster->parse[i])->context = tempContext;
-       }
-   }
-#ifdef SUCCESS
-   printf("%d connections established!!\n",len);
-#endif
-}
 
 
 
-void __remove_context_from_cluster(clusterInfo* mycluster){
+static void __remove_context_from_cluster(clusterInfo* mycluster){
    int len = mycluster-> len;
    int i = 0;
    redisContext * tempContext;
@@ -505,21 +501,17 @@ void __remove_context_from_cluster(clusterInfo* mycluster){
            redisFree(mycluster->parse[i]->context);
       else printf("context == NULL in remove_context_from_cluster\n");
    }
-#ifdef SUCCESS
-   printf("%d connections closed!!\n",len);
-#endif 
 }
 
 static void __global_disconnect(clusterInfo* cluster){
-     if(cluster->globalContext !=NULL)
-     redisFree(cluster->globalContext);
+    if(cluster->globalContext !=NULL)
+        redisFree(cluster->globalContext);
 }
 
 void disconnectDatabase(clusterInfo* cluster){
     __global_disconnect(cluster);
     __remove_context_from_cluster(cluster);
 }
-
 
 
 /*
@@ -551,6 +543,8 @@ int flushDb(clusterInfo* cluster){
     if(i == len) return 0;
     else return -1;
 }
+
+
 
 /*
 *init global space for getKey and set key, this function must be called only once before
@@ -597,14 +591,12 @@ singleClient* single_connect(int port,const char* ip){
 void pipe_set(singleClient*sc, char*key, char*value){
     redisAppendCommand(sc->singleContext,"SET %s %s",key,value);
     sc->pipe_count+=1;
-
 }
 
 //pipeline set command
 void pipe_get(singleClient*sc,char*key){
    redisAppendCommand(sc->singleContext,"GET %s ",key);
    sc->pipe_count+=1;
-
 }
 
 //pipeline getReply
@@ -686,3 +678,61 @@ void single_disconnect(singleClient* sc){
      free(sc);
      printf("disconnected!\n");
 }
+
+
+//start to support pipeline with redis cluster from here
+
+/*
+*This function allocate space for pipeline structure and then return a pointer to it.
+*/
+clusterPipe* get_pipeline(){
+    clusterPipe* localPipe = (clusterPipe*)malloc(sizeof(clusterPipe));
+    if(localPipe == NULL){
+        printf("unable to allocate clusterPipe\n");
+        return localPipe;
+    }else {
+        localPipe->pipe_count = 0;
+        localPipe->cur_index = 0;
+        int i;
+        for(i=0;i<MAX_PIPE_COUNT;i++){
+            localPipe->send_slot[i]=-1;
+            localPipe->sending_queue[i]=NULL;
+            localPipe->pipe_reply_buffer[i]=NULL;
+        }
+    }
+    return localPipe;
+}
+
+/*
+*set the pipeline count
+*/
+int set_pipeline_count(clusterPipe* mypipe,int n){
+    if(n<0 || n>100) {
+        printf("unsupported pipeline count\n");
+        return -1;
+    }else {
+        mypipe->pipe_count = n;
+        return 0;
+    }
+}
+
+int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value ){
+
+
+    return -1;
+}
+
+int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key){
+
+
+    return -1;
+}
+
+redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe){
+
+    return NULL;
+}
+
+
+
+
