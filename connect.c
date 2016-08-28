@@ -4,6 +4,7 @@
 #include <errno.h>
 #include "crc16.h"
 #include <string.h>
+#include <assert.h>
 
 #define CHECK_REPLY
 
@@ -702,8 +703,10 @@ clusterPipe* get_pipeline(){
         return localPipe;
     }else {
         localPipe->pipe_count = 0;
+        localPipe->current_count=0;
         localPipe->cur_index = 0;
-        localPipe->reply_index = 0;
+        localPipe->reply_index_front = 0;
+        localPipe->reply_index_end = 0;
         int i;
         for(i=0;i<MAX_PIPE_COUNT;i++){
             localPipe->send_slot[i]=-1;
@@ -724,6 +727,20 @@ int set_pipeline_count(clusterPipe* mypipe,int n) {
         return -1;
     }else {
         mypipe->pipe_count = n;
+       
+        //then reset all
+        mypipe->current_count = 0;
+        mypipe->cur_index = 0;
+        mypipe->reply_index_front = 0;
+        mypipe->reply_index_end = 0;
+
+        int i;
+        for(i=0;i<MAX_PIPE_COUNT;i++){
+            mypipe->send_slot[i]=-1;
+            mypipe->sending_queue[i]=NULL;
+            mypipe->pipe_reply_buffer[i]=NULL;
+        }
+        
         return 0;
     }
 }
@@ -745,7 +762,6 @@ int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe) {
 	    cluster->parse[i]->pipe_pending = 0;
         }
     }
-
     mypipe->cluster = cluster;
 }
 
@@ -816,7 +832,14 @@ int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key){
     return -1;
 }
 
+/*
+*get all the replies, used internally
+*/
 redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe){
+   if(mypipe->pipe_count != mypipe->current_count){
+       printf("not the right time to get all the replies\n");
+       return NULL;
+   }
    //TODO:
     int pipe_count = mypipe->pipe_count;
     int i=0;
@@ -824,16 +847,59 @@ redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe
     for(;i<pipe_count;i++){
         localcontext = mypipe->sending_queue[i]->context;
         redisGetReply(localcontext,(void **)&(mypipe->pipe_reply_buffer[i]));
+        mypipe->sending_queue[i]->pipe_pending--;
+        if(mypipe->sending_queue[i]->pipe_pending < 0) {
+            printf("error %s %d\n",__FILE__,__LINE__);
+            return NULL;
+        }
     }
+    mypipe->reply_index_end = i-1;
     return NULL;
 }
 
-bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe) {
-    //TODO: check the status to make sure that all the hosts have no pending reply, and 
-    
 
-    return true;
+int cluster_pipeline_flushBuffer(clusterInfo *cluster, clusterPipe *mypipe) {
+    __cluster_pipeline_getReply(cluster,mypipe);
 }
 
 
+redisReply* cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe* mypipe) {
+
+    if(cluster == NULL || mypipe == NULL) {
+        printf("NULL Pointer\n");
+        return NULL;
+    }
+
+    if(mypipe->cluster != cluster) {
+        printf("cluster and pipe do not match\n");
+        return NULL;
+    }
+    
+    int reply_index_front = mypipe->reply_index_front;    
+    int reply_index_end = mypipe->reply_index_end;
+    if(reply_index_front > reply_index_end){
+        printf("needs more getReply\n");
+        return NULL;
+    }
+    redisReply* reply = mypipe->pipe_reply_buffer[reply_index_front];
+    mypipe->reply_index_front++;
+    return reply;
+}
+
+
+/*
+*To make sure that each pipeline transaction completes in a consistent way.
+*/
+bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe) {
+    //TODO: check the status to make sure that all the hosts have no pending reply, and 
+    //step one: make sure that each parseArgv has exactly 0 pending reply
+    int len = cluster->len;
+    int i;
+    for(i=0;i<len;i++) {
+        assert(cluster->parse[i]->pipe_pending==0);
+    }
+    assert(mypipe->reply_index_front - 1 == mypipe->reply_index_end);
+    assert(mypipe->pipe_count == mypipe->current_count);
+    return true;
+}
 

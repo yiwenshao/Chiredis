@@ -135,7 +135,8 @@ typedef struct clusterPipe{
     int pipe_count;
     int current_count;
     int cur_index;
-    int reply_index;
+    int reply_index_front;
+    int reply_index_end;
     int send_slot[MAX_PIPE_COUNT];
     clusterInfo* cluster;
     parseArgv* sending_queue[MAX_PIPE_COUNT];
@@ -148,7 +149,8 @@ int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe);
 int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value );
 int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key);
 redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe);
+redisReply* cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe* mypipe);
 bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe);
-
+int cluster_pipeline_flushBuffer(clusterInfo *cluster,clusterPipe *mypipe);
 
 #endif
