@@ -87,7 +87,12 @@ static clusterInfo* __connect_cluster(char* ip, int port){
 	}
 }
 
+static clusterInfo* __mallocClusterInfo() {
+    clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
+    
 
+    return mycluster;
+}
 /*
 *This function uses the globle context to send cluster nodes command, and build a clusterInfo
 *based on the string returned. It does this by calling functions from_str_to_cluster,
@@ -98,7 +103,8 @@ static clusterInfo* __clusterInfo(redisContext* localContext){
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
     printf("type=%d",r->type);
 
-    clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
+    clusterInfo* mycluster = __mallocClusterInfo();
+
     mycluster->globalContext = localContext;
 
     __from_str_to_parseArgv(r->str,mycluster);
@@ -186,6 +192,7 @@ static void __process_clusterInfo(clusterInfo* mycluster){
         len_ip = port_start - ip_start;
         mycluster->parse[i] = (parseArgv*)malloc(sizeof(parseArgv));//do not forget
         mycluster->parse[i]->ip = (char*)malloc(len_ip + 1);
+        
 
         strncpy(mycluster->parse[i]->ip,ip_start,len_ip);
         mycluster->parse[i]->ip[len_ip]='\0';
@@ -213,6 +220,10 @@ static void __process_clusterInfo(clusterInfo* mycluster){
         mycluster->parse[i]->end_slot = atoi(slot_end);
 
         free(temp_slot_start);
+
+        //on default, the pipe mode doesn't open        
+        mycluster->parse[i]->pipe_mode = PIPE_CLOSE;
+        mycluster->parse[i]->pipe_pending = 0;
     }
 }
 /*
@@ -325,9 +336,7 @@ int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
 	redisContext *c = NULL;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
-#ifdef DEBUG	
-	printf("slot calculated= %d\n",myslot);
-#endif
+
         parseArgv* tempArgv = ((parseArgv*)(cluster->slot_to_host[myslot]));
 
 	if(tempArgv->slots[myslot]!=1){
@@ -371,7 +380,7 @@ int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
 /*
 *set method with the db option
 */
-int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid){
+int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid) {
         int localTid = tid%99;
 	if(localTid < 0){
 	   printf("local tid error in set\n");
@@ -391,9 +400,10 @@ int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int d
 	return re;
 }
 
-int set(clusterInfo* cluster, const char *key,char *set_in_value,int dbnum,int tid){
+int set(clusterInfo* cluster, const char *key,char *set_in_value,int dbnum,int tid) {
 	return __set_withdb(cluster,key,set_in_value,dbnum,tid);
 }
+
 
 /*
 *get method without use db option. here const char* is not compitable with char*
@@ -693,6 +703,7 @@ clusterPipe* get_pipeline(){
     }else {
         localPipe->pipe_count = 0;
         localPipe->cur_index = 0;
+        localPipe->reply_index = 0;
         int i;
         for(i=0;i<MAX_PIPE_COUNT;i++){
             localPipe->send_slot[i]=-1;
@@ -706,7 +717,7 @@ clusterPipe* get_pipeline(){
 /*
 *set the pipeline count
 */
-int set_pipeline_count(clusterPipe* mypipe,int n){
+int set_pipeline_count(clusterPipe* mypipe,int n) {
     if(n<0 || n>100) {
         printf("unsupported pipeline count\n");
         return -1;
@@ -716,23 +727,97 @@ int set_pipeline_count(clusterPipe* mypipe,int n){
     }
 }
 
-int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value ){
+int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe) {
+    if(cluster == NULL || mypipe == NULL) {
+        printf("NULL pointer\n");
+        return -1;
+    }
+    
+    int len = cluster->len;
+    for(int i=0;i<len;i++) {
+        if(cluster->parse[i] == NULL){
+            printf("NULL pointer %s %d",__FILE__,__LINE__);
+            return -1;
+        }else{
+            cluster->parse[i]->pipe_mode = PIPE_OPEN;
+	    cluster->parse[i]->pipe_pending = 0;
+        }
+    }
 
+    mypipe->cluster = cluster;
+}
 
-    return -1;
+int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value ) {
+    if(mypipe->cluster != cluster) {
+        printf("haven't bind yet\n");
+        return -1;
+    }
+
+    //TODO: use redisCommandAppend to send the command to buffer. and update the conresponding arrays.
+    if(mypipe->current_count == mypipe->pipe_count) {
+        printf("pipecount full\n");
+        return -1;
+    }
+    //Calculate the slot
+    redisContext *c = NULL;
+    int myslot;
+    myslot = crc16(key,strlen(key)) & 16383;
+
+    parseArgv* tempArgv = ((parseArgv*)(cluster->slot_to_host[myslot]));
+    if(tempArgv == NULL) {
+        printf("can't find the host for slot %d\n",myslot);
+    }
+
+    if(tempArgv->pipe_mode == PIPE_CLOSE) {
+        printf("not in pipeline mode");
+        return -1;
+    }
+
+    if(tempArgv->pipe_pending>100 || tempArgv->pipe_pending <0) {
+        printf("invalid pending reply\n");
+        return -1;
+    }
+
+    if(tempArgv->context == NULL){
+        printf("context = NULL in function set\n");
+        return -1;
+    }
+    
+    c = tempArgv->context;
+    redisAppendCommand(c,key,value);
+    int current_index = mypipe->cur_index;
+
+    mypipe->send_slot[current_index] = myslot;
+    mypipe->sending_queue[current_index] = tempArgv;
+    mypipe->current_count++;
+    mypipe->cur_index++;
+    tempArgv->pipe_pending++;
+    return 0;
 }
 
 int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key){
-
+    //TODO:
 
     return -1;
 }
 
 redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe){
-
+   //TODO:
+    int pipe_count = mypipe->pipe_count;
+    int i=0;
+    redisContext* localcontext;
+    for(;i<pipe_count;i++){
+        localcontext = mypipe->sending_queue[i]->context;
+        redisGetReply(localcontext,(void **)&(mypipe->pipe_reply_buffer[i]));
+    }
     return NULL;
 }
 
+bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe) {
+    //TODO: check the status to make sure that all the hosts have no pending reply, and 
+
+    return true;
+}
 
 
 

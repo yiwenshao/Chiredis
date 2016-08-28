@@ -6,7 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include <hiredis/hiredis.h>
-
+#include <stdbool.h>
 /*
 *parseArgv represents one single redis instance in a redis cluster.It's simply a formatted version of one line of the response of cluster nodes
 *
@@ -133,8 +133,11 @@ void single_disconnect(singleClient* sc);
 #define MAX_PIPE_COUNT 100
 typedef struct clusterPipe{
     int pipe_count;
-    int send_slot[MAX_PIPE_COUNT];
+    int current_count;
     int cur_index;
+    int reply_index;
+    int send_slot[MAX_PIPE_COUNT];
+    clusterInfo* cluster;
     parseArgv* sending_queue[MAX_PIPE_COUNT];
     redisReply* pipe_reply_buffer[MAX_PIPE_COUNT];
 }clusterPipe;
@@ -143,6 +146,6 @@ clusterPipe* get_pipeline();
 int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value );
 int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key);
 redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe);
-
+bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe);
 
 #endif
