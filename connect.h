@@ -143,9 +143,12 @@ typedef struct clusterPipe{
 }clusterPipe;
 
 clusterPipe* get_pipeline();
+int set_pipeline_count(clusterPipe* mypipe,int n);
+int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe);
 int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value );
 int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key);
 redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe);
 bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe);
+
 
 #endif

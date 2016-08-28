@@ -718,6 +718,7 @@ clusterPipe* get_pipeline(){
 *set the pipeline count
 */
 int set_pipeline_count(clusterPipe* mypipe,int n) {
+
     if(n<0 || n>100) {
         printf("unsupported pipeline count\n");
         return -1;
@@ -728,6 +729,7 @@ int set_pipeline_count(clusterPipe* mypipe,int n) {
 }
 
 int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe) {
+
     if(cluster == NULL || mypipe == NULL) {
         printf("NULL pointer\n");
         return -1;
@@ -747,7 +749,11 @@ int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe) {
     mypipe->cluster = cluster;
 }
 
-int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value ) {
+/*
+*base function for cluster_pipeline set and get.
+*/
+int __cluster_pipeline_bashcommand(clusterInfo *cluster,clusterPipe *mypipe,char *cmd,char *key,char *value){
+
     if(mypipe->cluster != cluster) {
         printf("haven't bind yet\n");
         return -1;
@@ -784,7 +790,10 @@ int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char
     }
     
     c = tempArgv->context;
-    redisAppendCommand(c,key,value);
+    if(strcmp(cmd,"set")==0)
+        redisAppendCommand(c,"set %s %s",key,value);
+    else if(strcmp(cmd,"get")==0)
+        redisAppendCommand(c,"get %s",key);
     int current_index = mypipe->cur_index;
 
     mypipe->send_slot[current_index] = myslot;
@@ -793,11 +802,17 @@ int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char
     mypipe->cur_index++;
     tempArgv->pipe_pending++;
     return 0;
+
+}
+
+
+int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value ) {
+    __cluster_pipeline_bashcommand(cluster,mypipe,"set",key,value);
 }
 
 int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key){
     //TODO:
-
+    __cluster_pipeline_bashcommand(cluster,mypipe,"get",key,NULL);
     return -1;
 }
 
@@ -815,6 +830,7 @@ redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe
 
 bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe) {
     //TODO: check the status to make sure that all the hosts have no pending reply, and 
+    
 
     return true;
 }
