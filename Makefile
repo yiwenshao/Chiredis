@@ -10,6 +10,14 @@ crc16.o: crc16.c crc16.h
 my_bench.o: my_bench.c my_bench.h
 	gcc -c my_bench.c
 
+.PHONY: install
+
+install:
+	gcc -shared -fPIC -o libchiredis.so connect.c crc16.c my_bench.c
+	mkdir -p /usr/local/include/chiredis /usr/local/lib
+	cp -a *.h /usr/local/include/chiredis
+	cp -a *.so /usr/local/lib/
+
 .PHONY: clean
 clean:
-	rm *.o main
+	rm *.o main *.so
