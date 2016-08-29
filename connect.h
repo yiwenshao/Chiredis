@@ -152,5 +152,6 @@ redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe
 redisReply* cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe* mypipe);
 bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe);
 int cluster_pipeline_flushBuffer(clusterInfo *cluster,clusterPipe *mypipe);
+int reset_pipeline_count(clusterPipe* mypipe, int n);
 
 #endif

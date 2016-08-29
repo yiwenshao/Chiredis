@@ -12,10 +12,14 @@ my_bench.o: my_bench.c my_bench.h
 
 .PHONY: install
 
+
+LIBOBJ=connect.c crc16.c
+LIBHEAD=connect.h
+
 install:
-	gcc -shared -fPIC -o libchiredis.so connect.c crc16.c my_bench.c
+	gcc -shared -fPIC -o libchiredis.so $(LIBOBJ)
 	mkdir -p /usr/local/include/chiredis /usr/local/lib
-	cp -a *.h /usr/local/include/chiredis
+	cp -a $(LIBHEAD) /usr/local/include/chiredis
 	cp -a *.so /usr/local/lib/
 
 .PHONY: clean

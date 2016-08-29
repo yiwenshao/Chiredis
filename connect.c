@@ -745,6 +745,15 @@ int set_pipeline_count(clusterPipe* mypipe,int n) {
     }
 }
 
+/*
+*just to make it feel more natural to use this kind of interface.
+*/
+int reset_pipeline_count(clusterPipe* mypipe, int n) {
+    set_pipeline_count(mypipe,n);
+}
+
+
+
 int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe) {
 
     if(cluster == NULL || mypipe == NULL) {
@@ -777,7 +786,7 @@ int __cluster_pipeline_bashcommand(clusterInfo *cluster,clusterPipe *mypipe,char
 
     //TODO: use redisCommandAppend to send the command to buffer. and update the conresponding arrays.
     if(mypipe->current_count == mypipe->pipe_count) {
-        printf("pipecount full\n");
+        printf("pipecount full, command rejected, please call getReply\n");
         return -1;
     }
     //Calculate the slot
@@ -818,18 +827,15 @@ int __cluster_pipeline_bashcommand(clusterInfo *cluster,clusterPipe *mypipe,char
     mypipe->cur_index++;
     tempArgv->pipe_pending++;
     return 0;
-
 }
 
 
 int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value ) {
-    __cluster_pipeline_bashcommand(cluster,mypipe,"set",key,value);
+    return __cluster_pipeline_bashcommand(cluster,mypipe,"set",key,value);
 }
 
 int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key){
-    //TODO:
-    __cluster_pipeline_bashcommand(cluster,mypipe,"get",key,NULL);
-    return -1;
+    return __cluster_pipeline_bashcommand(cluster,mypipe,"get",key,NULL);
 }
 
 /*
@@ -860,6 +866,7 @@ redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe
 
 int cluster_pipeline_flushBuffer(clusterInfo *cluster, clusterPipe *mypipe) {
     __cluster_pipeline_getReply(cluster,mypipe);
+    return 0;
 }
 
 
@@ -878,7 +885,8 @@ redisReply* cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe* mypipe) 
     int reply_index_front = mypipe->reply_index_front;    
     int reply_index_end = mypipe->reply_index_end;
     if(reply_index_front > reply_index_end){
-        printf("needs more getReply\n");
+        
+        printf("needs more getReply or the pipeline transaction has ended\n");
         return NULL;
     }
     redisReply* reply = mypipe->pipe_reply_buffer[reply_index_front];
