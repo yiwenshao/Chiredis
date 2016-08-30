@@ -1,6 +1,7 @@
 obj=main.o connect.o crc16.o my_bench.o
 main: $(obj) 
 	gcc -o main $(obj) -l hiredis -lpthread
+	touch libchiredis.so
 main.o: main.c connect.h
 	gcc -c main.c
 connect.o: connect.c connect.h

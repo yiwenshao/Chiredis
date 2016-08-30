@@ -20,6 +20,13 @@ static void __add_context_to_cluster(clusterInfo* mycluster);
 static void __print_clusterInfo_parsed(clusterInfo* mycluster);
 static void __remove_context_from_cluster(clusterInfo* mycluster);
 
+static char* CHIREDIS_VERSION = "1.0.2";
+
+void get_chiredis_version() {
+    printf("Chiredis version = %s",CHIREDIS_VERSION);
+}
+
+
 /*
 *for testing purposes
 */

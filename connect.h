@@ -14,6 +14,8 @@
 #define PIPE_OPEN 1
 #define PIPE_CLOSE 0
 
+void get_chiredis_version();
+
 typedef struct parseArgv{
     //ip address of the redis instance
     char * ip;

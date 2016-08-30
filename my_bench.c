@@ -4,7 +4,10 @@
 #include<string.h>
 #include<stdlib.h>
 #include<pthread.h>
-void *__db_function(void* thread_struct);
+#include<hiredis/hiredis.h>
+
+static void *__db_function(void* thread_struct);
+static void *__thread_pipeline_test(void* thread_struct);
 
 /*
 *input: add any valid filename
@@ -103,6 +106,7 @@ void *__db_function(void* thread_input){
   else printf("operation fail\n");
 
   disconnectDatabase(cluster);
+
 }
 
 
@@ -113,6 +117,7 @@ void test_with_multiple_threads(char*ip,int port) {
  char local_ip[30];
  strncpy(local_ip,ip,25);
  thread_struct thread_input[16];
+
  for(i=0;i<16;i++) {
     thread_input[i].in_ip = local_ip;
     thread_input[i].in_port = port;
@@ -138,4 +143,98 @@ void test_with_multiple_threads(char*ip,int port) {
       break;
      }
   }
+
+}
+
+
+
+
+#define PIPE_TEST_COUNT 20
+
+void* __thread_pipeline_test(void *thread_input) {
+    char * ip = ((thread_struct*)thread_input)->in_ip;
+    int port = ((thread_struct*)thread_input)->in_port;
+    int my_tid = ((thread_struct*)thread_input)->tid;
+    clusterInfo *cluster = connectRedis("192.168.1.22",6667);
+
+    if(cluster == NULL) {
+        printf("unable to connect to cluster\n");
+    }else {
+        printf("connection succeed\n");
+    }
+
+    int step = ((thread_struct*)thread_input)->step;
+
+    //three steps before using a cluster mode pipeline
+    clusterPipe *mypipe = get_pipeline();
+    set_pipeline_count(mypipe,PIPE_TEST_COUNT);
+    bind_pipeline_to_cluster(cluster,mypipe);
+    
+    
+    char key[256],value[256];
+    int count = 0;
+    int init = (my_tid/step - 1)*step;
+    printf("tid=%d start=%d end=%d\n",my_tid,init,my_tid);
+
+    for(int i=init;i<my_tid;i++) {
+        sprintf(key,"key=%d",i);
+        sprintf(value,"value=%d",i);
+	//we have a key and value here, so we can use the pipeline
+        count++;
+        if(count<PIPE_TEST_COUNT){
+            cluster_pipeline_set(cluster,mypipe,key,value);
+        }else{
+            cluster_pipeline_set(cluster,mypipe,key,value);
+            count=0;
+            cluster_pipeline_flushBuffer(cluster,mypipe);
+            int inner = 0;
+            for(;inner<PIPE_TEST_COUNT;inner++) {
+                redisReply *reply = cluster_pipeline_getReply(cluster,mypipe);
+                if(reply == NULL) {
+                    printf("NULL reply in %d\n",i);
+                }else{
+                    freeReplyObject(reply);
+                }
+            }
+            cluster_pipeline_complete(cluster,mypipe);
+            reset_pipeline_count(mypipe,PIPE_TEST_COUNT);
+        }        
+    }
+    disconnectDatabase(cluster);    
+    return (void*)0;
+}
+
+void test_pipeline_with_multiple_threads (char *ip,int port) {
+    pthread_t th[16];
+    int res, i;
+    char local_ip[30];
+    strncpy(local_ip,ip,25);
+    thread_struct thread_input[16];
+
+    int step = 1000;
+    
+    for(i=0;i<16;i++) {
+        thread_input[i].in_ip = local_ip;
+        thread_input[i].in_port = port;
+        thread_input[i].tid = (i+1)*step;
+        thread_input[i].step = step;
+    }
+
+    for(i=0;i<16;i++) { 
+        res = pthread_create(&th[i],NULL,__thread_pipeline_test,(void*)(&thread_input[i]));
+        if(res!=0) {
+            printf("thread fail\n");
+            break;
+        }
+    }
+
+    void* thread_result;
+
+    for(i=0;i<16;i++) { 
+    res = pthread_join(th[i],&thread_result);
+        if(res!=0) {
+            printf("thread join fail\n");
+            break;
+        }
+    }
 }
