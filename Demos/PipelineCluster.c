@@ -4,9 +4,10 @@
 int main(){
     //STEP ONE: use an ip and port to connect to a redis cluster 
     clusterInfo *cluster = connectRedis("192.168.1.22",6667);
-    if(cluster == NULL) {
+
+    if (cluster == NULL) {
         printf("unable to connect to cluster\n");
-    }else{
+    } else {
         printf("connection succeed\n");
     }
 
@@ -57,4 +58,3 @@ int main(){
     //After call the function reset_pipeline_count, you can then continue to call get/set and getReply.
     return 0;
 }
-
