@@ -891,13 +891,16 @@ redisReply* cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe* mypipe) 
     
     int reply_index_front = mypipe->reply_index_front;    
     int reply_index_end = mypipe->reply_index_end;
+
     if(reply_index_front > reply_index_end){
         
         printf("needs more getReply or the pipeline transaction has ended\n");
         return NULL;
     }
+
     redisReply* reply = mypipe->pipe_reply_buffer[reply_index_front];
     mypipe->reply_index_front++;
+
     return reply;
 }
 
