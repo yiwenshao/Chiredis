@@ -43,18 +43,47 @@ int main(){
             printf("NULL reply\n");
             continue;
         }
-        printf("%s\n",reply->str);
+        if(reply->type == REDIS_REPLY_NIL) {
+            printf("nil\n");
+        }else{
+            printf("%s\n",reply->str);
+        }
         freeReplyObject(reply);
     }
     
     //STEP SIX: check whether this transaction succeeded. if it succeeded, nothing will happen, otherwise the program aborts.
     cluster_pipeline_complete(cluster,mypipe);
 
-    //STEP SEVEN: disconnect
-    disconnectDatabase(cluster); 
-
     //What if you want to start another pipeline transaction? You do not need to start from scratch, just call 
     // reset_pipeline_count(mypipe,40). you can use numbers other than 40, but numbers less than 80 is recomended.
     //After call the function reset_pipeline_count, you can then continue to call get/set and getReply.
+
+    //Example of another pipeline transaction.
+    reset_pipeline_count(mypipe,20);
+    for(i=0;i<10;i++){
+        sprintf(key,"key2=%d",i);
+        sprintf(value,"value2=%d",i);
+        cluster_pipeline_set(cluster,mypipe,key,value);
+        cluster_pipeline_get(cluster,mypipe,key);
+    }
+    cluster_pipeline_flushBuffer(cluster,mypipe);
+    for(i=0;i<20;i++){
+        redisReply* reply = cluster_pipeline_getReply(cluster,mypipe);
+        if(reply == NULL) {
+            printf("NULL reply\n");
+            continue;
+        }
+        if(reply->type == REDIS_REPLY_NIL){
+            printf("nil\n");
+        }else {
+            printf("%s\n",reply->str);
+        }
+        freeReplyObject(reply);
+    }
+
+    //STEP SEVEN: disconnect
+    disconnectDatabase(cluster); 
+
+
     return 0;
 }
