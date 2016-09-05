@@ -1,4 +1,4 @@
-# Chiredis
+## Chiredis
 Chiredis is a redis client library written in c. It is built upon hiredis to add supports for access to redis cluster. for more information, please read the wiki. 
 
 To use chiredis, you need to follow the following steps.

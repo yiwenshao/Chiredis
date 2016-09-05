@@ -150,4 +150,6 @@ bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe);
 int cluster_pipeline_flushBuffer(clusterInfo *cluster,clusterPipe *mypipe);
 //after finishing one pipeline transaction, use this function to start another
 int reset_pipeline_count(clusterPipe* mypipe, int n);
+
+int release_pipeline(clusterPipe* mypipe);
 #endif

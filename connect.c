@@ -931,3 +931,9 @@ bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe) {
     return true;
 }
 
+int relese_pipeline(clusterPipe* mypipe){
+    if(mypipe != NULL)
+        free(mypipe);
+    return 0;
+}
+
