@@ -58,29 +58,10 @@ typedef struct clusterInfo{
 *send the command 'cluster nodes',receive the response, construct clusterInfo, and the we are free to use set and get
 */
 clusterInfo* connectRedis(char*ip,int port);
-
 int set(clusterInfo* cluster,const char *key, char *set_in_value,int dunum,int tid);
-int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value);
-int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid);
-
-
 int get(clusterInfo*cluster, const char *key, char *get_in_value, int dbnum,int tid);
-int __get_withdb(clusterInfo*cluster, const char* key,char*get_in_value,int dbnum,int tid);
-int __get_nodb(clusterInfo*cluster, const char* key,char* get_in_value);
-
-
-
-
-
 void disconnectDatabase(clusterInfo* cluster);
-
-
-void __set_redirect(char* str);
-
-
-
 int flushDb(clusterInfo* cluster);
-
 
 /*
 *getspace and set space are initialized using init_global. currently there are 100 slot. each call to set or get method with their tid 
@@ -122,7 +103,6 @@ void pipe_getReply(singleClient*sc,char* revalue);
 void pipe_getAllReply(singleClient*sc);
 void single_disconnect(singleClient* sc);
 
-
 /*
 *this structure describes a pipe line transaction.
 *first we set a pipe count, say 16
@@ -134,26 +114,40 @@ void single_disconnect(singleClient* sc);
 */
 #define MAX_PIPE_COUNT 100
 typedef struct clusterPipe{
+//preset the total number of pipeline operations 
     int pipe_count;
+//each time we issue a command, current_count+=1 until it reaches pipe_count
     int current_count;
     int cur_index;
+//we get the replies from pipe_reply_buffer, using front and end pointers
     int reply_index_front;
     int reply_index_end;
+//
     int send_slot[MAX_PIPE_COUNT];
+//one pipeline buffer for one cluster
     clusterInfo* cluster;
+//one parseArgv struct represents one host in the cluster,if we send the first command through host_1, then sending_queue[0] points to host_1
     parseArgv* sending_queue[MAX_PIPE_COUNT];
+//each pointer points to a reply, we send the the first command through host_1, then send_queue[0] points to host_1, so we get a reply through host_1, and pipe_reply_buffer[0] points to 
+//the first reply, thus getting the replies in order
     redisReply* pipe_reply_buffer[MAX_PIPE_COUNT];
 }clusterPipe;
-
+//initialize a pipeline structure
 clusterPipe* get_pipeline();
 int set_pipeline_count(clusterPipe* mypipe,int n);
 int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe);
+
+//after setting the pipeline, these two functions can be used to issue set/get commands
 int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value );
 int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key);
-redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe);
-redisReply* cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe* mypipe);
-bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe);
-int cluster_pipeline_flushBuffer(clusterInfo *cluster,clusterPipe *mypipe);
-int reset_pipeline_count(clusterPipe* mypipe, int n);
 
+redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe);
+//get one reply from the pipeline buffer
+redisReply* cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe* mypipe);
+//assert that the pipeline transaction has completed
+bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe);
+//after sending the get/set commands, use this function to flush the socket
+int cluster_pipeline_flushBuffer(clusterInfo *cluster,clusterPipe *mypipe);
+//after finishing one pipeline transaction, use this function to start another
+int reset_pipeline_count(clusterPipe* mypipe, int n);
 #endif

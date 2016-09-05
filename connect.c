@@ -22,6 +22,16 @@ static void __remove_context_from_cluster(clusterInfo* mycluster);
 
 static char* CHIREDIS_VERSION = "1.0.2";
 
+static int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value);
+static int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid);
+
+static int __get_withdb(clusterInfo*cluster, const char* key,char*get_in_value,int dbnum,int tid);
+static int __get_nodb(clusterInfo*cluster, const char* key,char* get_in_value);
+
+static void __set_redirect(char* str);
+
+
+
 void get_chiredis_version() {
     printf("Chiredis version = %s",CHIREDIS_VERSION);
 }
