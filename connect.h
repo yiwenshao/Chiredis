@@ -80,8 +80,9 @@ typedef struct setspace{
 getspace global_getspace[100];
 setspace global_setspace[100];
 
+//these two functions are for testing purposes
 void init_global();
-
+int release_global();
 /*
 *use singleContext to connect to one redis instance.and use the conresponding functions to try pipeline with single redis instance. This structure does not 
 *support redis cluster.

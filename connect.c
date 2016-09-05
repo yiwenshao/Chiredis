@@ -588,6 +588,16 @@ void init_global(){
      }
 }
 
+int release_global(){
+     int i;
+     for(i=0;i<99;i++){
+        if(global_getspace[i].getKey != NULL)
+            free(global_getspace[i].getKey);
+        if(global_setspace[i].setKey != NULL)
+            free(global_setspace[i].setKey);
+     }
+}
+
 singleClient* single_connect(int port,const char* ip){
       singleClient* sc = (singleClient*)malloc(sizeof(singleClient));
       sc->port=port;
@@ -931,9 +941,8 @@ bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe) {
     return true;
 }
 
-int relese_pipeline(clusterPipe* mypipe){
+int relese_pipeline(clusterPipe* mypipe) {
     if(mypipe != NULL)
         free(mypipe);
     return 0;
 }
-
