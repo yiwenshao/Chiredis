@@ -141,7 +141,7 @@ int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe);
 int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value );
 int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key);
 
-redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe);
+
 //get one reply from the pipeline buffer
 redisReply* cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe* mypipe);
 //assert that the pipeline transaction has completed

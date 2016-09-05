@@ -30,7 +30,7 @@ static int __get_nodb(clusterInfo*cluster, const char* key,char* get_in_value);
 
 static void __set_redirect(char* str);
 
-
+static redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe);
 
 void get_chiredis_version() {
     printf("Chiredis version = %s",CHIREDIS_VERSION);
@@ -271,7 +271,7 @@ static void __test_slot(clusterInfo* mycluster){
 }
 
 
-void __assign_slots(clusterInfo* mycluster){
+static void __assign_slots(clusterInfo* mycluster){
     int len = mycluster->len;
     int i;
     int count = 0;
@@ -295,7 +295,7 @@ void __assign_slots(clusterInfo* mycluster){
 /*
 *This function give each node in the cluster a context connection
 */
-void __add_context_to_cluster(clusterInfo* mycluster){
+static void __add_context_to_cluster(clusterInfo* mycluster){
    int len = mycluster-> len;
    int i = 0;
    redisContext * tempContext;
@@ -319,7 +319,7 @@ void __add_context_to_cluster(clusterInfo* mycluster){
 /*
 *once we meet indirection, this function help parse the information returned
 */
-void __set_redirect(char* str){
+static void __set_redirect(char* str){
 	char *slot,*ip,*port;
 	slot = strchr(str,' ');
 	slot++;
@@ -350,7 +350,7 @@ void __set_redirect(char* str){
 /*
 *calculate the slot, find the context, and then send command
 */
-int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
+static int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
 	redisContext *c = NULL;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
@@ -398,7 +398,7 @@ int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
 /*
 *set method with the db option
 */
-int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid) {
+static int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid) {
         int localTid = tid%99;
 	if(localTid < 0){
 	   printf("local tid error in set\n");
@@ -426,7 +426,7 @@ int set(clusterInfo* cluster, const char *key,char *set_in_value,int dbnum,int t
 /*
 *get method without use db option. here const char* is not compitable with char*
 */
-int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
+static int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 //        assert(get_in_value != NULL);
 	if(key==NULL){
 	   strcpy(get_in_value,"key is NULL");
@@ -490,7 +490,7 @@ int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 *tid can be used to  allocate global get/put space for a specific thread
 *each thread only need one tid and one space
 */
-int __get_withdb(clusterInfo* cluster, const char* key,\
+static int __get_withdb(clusterInfo* cluster, const char* key,\
                             char* get_in_value,int dbnum,int tid){
         int localTid = tid%99;
 	if (localTid <0) {
@@ -794,7 +794,7 @@ int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe) {
 /*
 *base function for cluster_pipeline set and get.
 */
-int __cluster_pipeline_bashcommand(clusterInfo *cluster,clusterPipe *mypipe,char *cmd,char *key,char *value){
+static int __cluster_pipeline_bashcommand(clusterInfo *cluster,clusterPipe *mypipe,char *cmd,char *key,char *value){
 
     if(mypipe->cluster != cluster) {
         printf("haven't bind yet\n");
@@ -858,7 +858,7 @@ int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key){
 /*
 *get all the replies, used internally
 */
-redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe){
+static redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe){
    if(mypipe->pipe_count != mypipe->current_count){
        printf("not the right time to get all the replies\n");
        return NULL;
