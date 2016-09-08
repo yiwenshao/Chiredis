@@ -16,6 +16,7 @@ typedef struct benchmarkInfo{
     char name[50];
     //thread id, intended for multi-threading uses
     unsigned short tid;
+    FILE *flushFile;
     //key length and value length
     unsigned int keyLen;
     unsigned int valueLen;
@@ -42,4 +43,5 @@ void flushResults();
 
 kvPair* getKvPair(benchmarkInfo* benchmark);
 
+void setFileName(benchmarkInfo* benchmark,char* name);
 #endif

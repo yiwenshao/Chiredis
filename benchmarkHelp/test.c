@@ -16,10 +16,12 @@ void test_init_and_load() {
         long long end = timeStamp();
         addDuration(benchmark,end - start);        
     }
+    char temp[11] = "123";
+    setFileName(benchmark,temp);
     for(i=0;i<count;i++){
         printf("duration = %lld\n",benchmark->resultsToUse[i]->duration_miliseconds);
     }
-
+    flushResults(benchmark);
 }
 
 

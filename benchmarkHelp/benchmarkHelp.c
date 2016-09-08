@@ -37,8 +37,9 @@ benchmarkInfo* initBenchmark(){
         mark->valueLen = init_valueLen;
         mark->currentKvPairIndex = init_currentKvPairIndex;
         mark->currentResultIndex = init_currentResultIndex;
+        mark->flushFile = NULL;
 
-        int i;
+        unsigned long i;
         mark->kvPairToUse = (kvPair**)malloc(sizeof(kvPair*)*init_count);
 
         if(mark->kvPairToUse == NULL){
@@ -77,6 +78,7 @@ benchmarkInfo* loadData(benchmarkInfo* info){
         printf("load == NULL, unable to load data\n");
         return NULL;
     }
+
     int keyid = 0;
     int kl = info->keyLen;
     int vl = info->valueLen;
@@ -84,7 +86,8 @@ benchmarkInfo* loadData(benchmarkInfo* info){
     memset(keyTemp,97,kl);
     char valueTemp[vl];
     memset(valueTemp,97,vl);
-    for (int i=0;i<info->count;i++) {
+    unsigned long i;
+    for (i=0;i<info->count;i++) {
         info->kvPairToUse[i]->key = (char*)malloc(sizeof(char)*(kl+1));
         info->kvPairToUse[i]->value = (char*)malloc(sizeof(char)*(vl+1));
         if (info->kvPairToUse[i]->key == NULL || info->kvPairToUse[i]->value == NULL) {
@@ -123,9 +126,16 @@ void freeBenchmark() {
 
 }
 
-void flushResults() {
-
-
+void flushResults(benchmarkInfo *benchmark) {
+    unsigned long i;
+    unsigned long count = benchmark->count;
+    char timeTemp[100];
+    for(i=0;i<count;i++){
+        long long duration = benchmark->resultsToUse[i]->duration_miliseconds;
+        sprintf(timeTemp,"%lld\n",duration);
+        fputs(timeTemp,benchmark->flushFile);
+    }
+    fclose(benchmark->flushFile);
 }
 
 kvPair* getKvPair(benchmarkInfo* benchmark){
@@ -137,5 +147,13 @@ kvPair* getKvPair(benchmarkInfo* benchmark){
     }else{
         printf("We have used up all the kv pairs\n");    
         return NULL;
+    }
+}
+
+void setFileName(benchmarkInfo *benchmark, char* name){
+    sprintf(benchmark->name,"./data/d_%s",name);
+    benchmark->flushFile = fopen(benchmark->name,"a");
+    if(benchmark->flushFile == NULL){
+        printf("unable to open file %s\n",benchmark->name);
     }
 }
