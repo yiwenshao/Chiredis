@@ -5,10 +5,11 @@ void test_init_and_load(){
     benchmark = loadData(benchmark);
     int count = benchmark->count;
     int i;
+    kvPair *tempPair;
     for(i=0;i<count;i++){
-        printf("k=%s v=%s\n",benchmark->kvPairToUse[i]->key,benchmark->kvPairToUse[i]->value);
+        tempPair = getKvPair(benchmark);
+        printf("k=%s v=%s\n",tempPair->key,tempPair->value);
     }
-     
 }
 
 

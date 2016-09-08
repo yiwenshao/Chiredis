@@ -18,6 +18,7 @@ benchmarkInfo* initBenchmark() {
     unsigned long init_count = 100;
     unsigned int init_keyLen = 20;
     unsigned int init_valueLen = 20;
+    unsigned long init_currentIndex = 0;
     
     benchmarkInfo *mark = (benchmarkInfo*)malloc(sizeof(benchmarkInfo));
 
@@ -30,6 +31,8 @@ benchmarkInfo* initBenchmark() {
         mark->count = init_count;
         mark->keyLen = init_keyLen;
         mark->valueLen = init_valueLen;
+        mark->currentIndex = init_currentIndex;
+
         int i;
         mark->kvPairToUse = (kvPair**)malloc(sizeof(kvPair*)*init_count);
 
@@ -109,7 +112,14 @@ void flushResults(){
 }
 
 kvPair* getKvPair(benchmarkInfo* benchmark){
-    
-    return NULL;
+    int index = benchmark->currentIndex;
+    int count = benchmark->count;
+    if(index < count){
+        benchmark->currentIndex +=1;
+        return benchmark->kvPairToUse[index];
+    }else{
+        printf("We have used up all the kv pairs\n");    
+        return NULL;
+    }
 }
 
