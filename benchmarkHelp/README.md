@@ -1,4 +1,5 @@
-This module tries to add a general framework for benchmarking database systems.
+This module tries to add a general framework for benchmarking database systems. It can be used as a 
+minimalistic k-v benchmark engine.
 It provides some help functions for testing.
 1.load
     load kv pairs into memory
