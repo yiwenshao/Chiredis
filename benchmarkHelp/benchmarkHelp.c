@@ -128,7 +128,7 @@ void freeBenchmark() {
 
 void flushResults(benchmarkInfo *benchmark) {
     unsigned long i;
-    unsigned long count = benchmark->count;
+    unsigned long count = benchmark->currentResultIndex;
     char timeTemp[100];
     for(i=0;i<count;i++){
         long long duration = benchmark->resultsToUse[i]->duration_miliseconds;

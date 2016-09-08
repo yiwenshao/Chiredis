@@ -58,6 +58,9 @@ void *__db_function(void* thread_input){
   printf("success\n");
 }
 
+/*
+*this test uses interface with db number and globally shared space.
+*/
 void test_with_multiple_threads(char*ip,int port) {
  pthread_t th[16];
  int res, i;
@@ -93,9 +96,6 @@ void test_with_multiple_threads(char*ip,int port) {
 
 }
 
-
-
-
 #define PIPE_TEST_COUNT 20
 
 void* __thread_pipeline_test(void *thread_input) {
@@ -110,43 +110,47 @@ void* __thread_pipeline_test(void *thread_input) {
         printf("connection succeed\n");
     }
 
-    int step = ((thread_struct*)thread_input)->step;
-
     //three steps before using a cluster mode pipeline
     clusterPipe *mypipe = get_pipeline();
     set_pipeline_count(mypipe,PIPE_TEST_COUNT);
-    bind_pipeline_to_cluster(cluster,mypipe);
+    bind_pipeline_to_cluster(cluster,mypipe); 
     
-    
-    char key[256],value[256];
+    benchmarkInfo *benchmark = initBenchmark();
+    benchmark = loadData(benchmark);
+    kvPair *tempPair;
+    char *key,*value;
     int count = 0;
-    int init = (my_tid/step - 1)*step;
-    printf("tid=%d start=%d end=%d\n",my_tid,init,my_tid);
-
-    for(int i=init;i<my_tid;i++) {
-        sprintf(key,"key=%d",i);
-        sprintf(value,"value=%d",i);
-	//we have a key and value here, so we can use the pipeline
-        count++;
-        if(count<PIPE_TEST_COUNT){
+     
+    for(int i=0;i<5;i++) {
+        count = 0;
+        long long start = timeStamp();
+        while(count<PIPE_TEST_COUNT){
+            tempPair = getKvPair(benchmark);
+            key = tempPair->key;
+            value = tempPair->value;
             cluster_pipeline_set(cluster,mypipe,key,value);
-        }else{
-            cluster_pipeline_set(cluster,mypipe,key,value);
-            count=0;
-            cluster_pipeline_flushBuffer(cluster,mypipe);
-            int inner = 0;
-            for(;inner<PIPE_TEST_COUNT;inner++) {
+            count++;
+        }
+        cluster_pipeline_flushBuffer(cluster,mypipe);
+        int inner = 0;
+        for(;inner<PIPE_TEST_COUNT;inner++){
                 redisReply *reply = cluster_pipeline_getReply(cluster,mypipe);
                 if(reply == NULL) {
                     printf("NULL reply in %d\n",i);
-                }else{
+                } else {
                     freeReplyObject(reply);
                 }
-            }
-            cluster_pipeline_complete(cluster,mypipe);
-            reset_pipeline_count(mypipe,PIPE_TEST_COUNT);
-        }        
+        }
+        cluster_pipeline_complete(cluster,mypipe);
+        reset_pipeline_count(mypipe,PIPE_TEST_COUNT);
+        long long end = timeStamp();
+        addDuration(benchmark,end-start);
     }
+
+    char temp[11] = "123";
+    sprintf(temp+3,"%d",my_tid);
+    setFileName(benchmark,temp);
+    flushResults(benchmark);
     disconnectDatabase(cluster);    
     return (void*)0;
 }
@@ -186,7 +190,8 @@ void test_pipeline_with_multiple_threads (char *ip,int port) {
 }
 
 int main(){
-    test_with_multiple_threads("192.168.1.22",6667);
+    //test_with_multiple_threads("192.168.1.22",6667);
+    test_pipeline_with_multiple_threads("192.168.1.22",6667);
     return 0;
 }
 
