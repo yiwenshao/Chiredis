@@ -16,18 +16,23 @@ typedef struct benchmarkInfo{
     char name[50];
     //thread id, intended for multi-threading uses
     unsigned short tid;
+    //key length and value length
     unsigned int keyLen;
     unsigned int valueLen;
+    //an array of kv Pairs
     kvPair** kvPairToUse;
+    //an array of results
     results** resultsToUse;
     //total number of kvs
     unsigned long count;
-    unsigned long currentIndex;
+    //current index of kvPairToUse, use it to fetch a pointer to kvPair
+    unsigned long currentKvPairIndex;
+    unsigned long currentResultIndex;
 }benchmarkInfo;
 
 benchmarkInfo* initBenchmark();
 benchmarkInfo* loadData(benchmarkInfo* info);
-void timeStamp();
+long long timeStamp();
 
 void addDuration();
 

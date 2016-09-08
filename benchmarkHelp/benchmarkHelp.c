@@ -1,6 +1,9 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<sys/time.h>
+#include<unistd.h>
+
 #include"benchmarkHelp.h"
 
 char* benchmarkHelpVersion(){
@@ -10,15 +13,16 @@ char* benchmarkHelpVersion(){
 /*
 Malloc and initialize a benchmarkInfo struct.
 */
-benchmarkInfo* initBenchmark() {
 
+benchmarkInfo* initBenchmark(){
     //default values for benmarkInfo
     char *init_name ="file";
     unsigned short init_tid = 0;
     unsigned long init_count = 100;
     unsigned int init_keyLen = 20;
     unsigned int init_valueLen = 20;
-    unsigned long init_currentIndex = 0;
+    unsigned long init_currentKvPairIndex = 0;
+    unsigned long init_currentResultIndex = 0;
     
     benchmarkInfo *mark = (benchmarkInfo*)malloc(sizeof(benchmarkInfo));
 
@@ -31,7 +35,8 @@ benchmarkInfo* initBenchmark() {
         mark->count = init_count;
         mark->keyLen = init_keyLen;
         mark->valueLen = init_valueLen;
-        mark->currentIndex = init_currentIndex;
+        mark->currentKvPairIndex = init_currentKvPairIndex;
+        mark->currentResultIndex = init_currentResultIndex;
 
         int i;
         mark->kvPairToUse = (kvPair**)malloc(sizeof(kvPair*)*init_count);
@@ -94,32 +99,43 @@ benchmarkInfo* loadData(benchmarkInfo* info){
     return info;
 }
 
-void timeStamp() {
-
+long long timeStamp() {
+    struct timeval tv;
+    long long ust;
+    gettimeofday(&tv, NULL);
+    ust = ((long long)tv.tv_sec)*1000000;
+    ust += tv.tv_usec;
+    return ust;
 }
 
-void addDuration(){
-
+void addDuration(benchmarkInfo *benchmark,long long duration){
+    unsigned long count = benchmark->count;
+    unsigned long currentResultIndex = benchmark->currentResultIndex;
+    if(currentResultIndex < count){
+        benchmark->currentResultIndex+=1;
+        benchmark->resultsToUse[currentResultIndex]->duration_miliseconds = duration;
+    }else{
+        printf("result full \n");
+    }
 }
 
 void freeBenchmark() {
 
 }
 
-void flushResults(){
+void flushResults() {
 
 
 }
 
 kvPair* getKvPair(benchmarkInfo* benchmark){
-    int index = benchmark->currentIndex;
+    int index = benchmark->currentKvPairIndex;
     int count = benchmark->count;
     if(index < count){
-        benchmark->currentIndex +=1;
+        benchmark->currentKvPairIndex +=1;
         return benchmark->kvPairToUse[index];
     }else{
         printf("We have used up all the kv pairs\n");    
         return NULL;
     }
 }
-
