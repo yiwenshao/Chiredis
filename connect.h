@@ -33,6 +33,7 @@ typedef struct parseArgv{
     int pipe_mode;
     //how many replies to get
     int pipe_pending;
+
 }parseArgv;
 
 /*

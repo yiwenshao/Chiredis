@@ -7,7 +7,7 @@
 #include <assert.h>
 
 #define CHECK_REPLY
-static char* CHIREDIS_VERSION = "1.0.2";
+static char* CHIREDIS_VERSION = "1.0.4";
 //the following are a list of internal function that are not intended to be used outsize this file.
 static void __global_disconnect(clusterInfo* cluster);
 static clusterInfo* __connect_cluster(char* ip, int port);
@@ -222,6 +222,7 @@ static void __process_clusterInfo(clusterInfo* mycluster){
         strncpy(temp_port,port_start,len_port);
         temp_port[len_port]='\0';
         mycluster->parse[i]->port = atoi(temp_port);
+        free(temp_port);
 
         connect_start = strstr(port_end,"connected");
         connect_start = strchr(connect_start,' ');
@@ -531,8 +532,11 @@ static void __free_clusterNodes_info(clusterInfo *cluster) {
     for(i=0;i<len;i++){
        if(cluster->argv[i] != NULL)
            free(cluster->argv[i]);
-       if(cluster->parse[i] != NULL)
+       if(cluster->parse[i] != NULL) {
+           if(cluster->parse[i]->ip != NULL)
+               free(cluster->parse[i]->ip);
            free(cluster->parse[i]);
+       }
     }
 }
 
