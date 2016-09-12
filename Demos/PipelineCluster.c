@@ -82,8 +82,7 @@ int main(){
     }
 
     //STEP SEVEN: disconnect
-    disconnectDatabase(cluster); 
-
-
+    release_pipeline(mypipe);
+    disconnectDatabase(cluster);
     return 0;
 }

@@ -25,7 +25,7 @@ void disconnect_after_connect(){
 
 int main() {
     int i;
-    for(i=0;i<1;i++)
+    for(i=0;i<100;i++)
         disconnect_after_connect();
     return 0;
 }

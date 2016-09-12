@@ -33,7 +33,7 @@ static void __set_redirect(char* str);
 static redisReply* __cluster_pipeline_getReply(clusterInfo *cluster,clusterPipe *mypipe);
 
 void get_chiredis_version() {
-    printf("Chiredis version = %s",CHIREDIS_VERSION);
+    printf("Chiredis version = %s\n",CHIREDIS_VERSION);
 }
 
 
@@ -810,7 +810,7 @@ int bind_pipeline_to_cluster(clusterInfo* cluster, clusterPipe* mypipe) {
 /*
 *base function for cluster_pipeline set and get.
 */
-static int __cluster_pipeline_bashcommand(clusterInfo *cluster,clusterPipe *mypipe,char *cmd,char *key,char *value){
+static int __cluster_pipeline_basecommand(clusterInfo *cluster,clusterPipe *mypipe,char *cmd,char *key,char *value){
 
     if(mypipe->cluster != cluster) {
         printf("haven't bind yet\n");
@@ -864,11 +864,11 @@ static int __cluster_pipeline_bashcommand(clusterInfo *cluster,clusterPipe *mypi
 
 
 int cluster_pipeline_set(clusterInfo *cluster,clusterPipe *mypipe,char *key,char *value ) {
-    return __cluster_pipeline_bashcommand(cluster,mypipe,"set",key,value);
+    return __cluster_pipeline_basecommand(cluster,mypipe,"set",key,value);
 }
 
 int cluster_pipeline_get(clusterInfo *cluster,clusterPipe *mypipe,char *key){
-    return __cluster_pipeline_bashcommand(cluster,mypipe,"get",key,NULL);
+    return __cluster_pipeline_basecommand(cluster,mypipe,"get",key,NULL);
 }
 
 /*
@@ -947,7 +947,7 @@ bool cluster_pipeline_complete(clusterInfo *cluster,clusterPipe *mypipe) {
     return true;
 }
 
-int relese_pipeline(clusterPipe* mypipe) {
+int release_pipeline(clusterPipe* mypipe) {
     if(mypipe != NULL)
         free(mypipe);
     return 0;

@@ -1,5 +1,5 @@
 COMMON_LIBS=-lchiredis -lhiredis -lpthread
-ALL_TARGET=connect_and_disconnect example multi_nopipe PipelineCluster
+ALL_TARGET=connect_and_disconnect example multi_nopipe PipelineCluster version
 
 
 .PHONY: ALL
@@ -16,7 +16,8 @@ multi_nopipe: multi_nopipe.c
 
 PipelineCluster: PipelineCluster.c
 	gcc -o $@ $^ $(COMMON_LIBS)
-
+version: version.c
+	gcc -o $@ $^ $(COMMON_LIBS)
 .PHONY: clean
 clean:
 	-rm $(ALL_TARGET)
