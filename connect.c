@@ -93,6 +93,7 @@ static clusterInfo* __connect_cluster(char* ip, int port){
 		  return NULL;
 	       }
 	 }else{
+
 	 }
 	 
 	clusterInfo* cluster = __clusterInfo(localContext);
@@ -117,16 +118,20 @@ static clusterInfo* __mallocClusterInfo() {
 *based on the string returned. It does this by calling functions from_str_to_cluster,
 *process_clusterInfo,and addign_slot;
 */
-static clusterInfo* __clusterInfo(redisContext* localContext){
+static clusterInfo* __clusterInfo(redisContext* localContext) {
     redisContext *c = localContext;
     redisReply* r = (redisReply*)redisCommand(c,"cluster nodes");
-    printf("type=%d",r->type);
-
+    if(r == NULL) {
+        printf("panic! %s %d\n",__FILE__,__LINE__);
+        return NULL;
+    }
     clusterInfo* mycluster = __mallocClusterInfo();
 
     mycluster->globalContext = localContext;
 
     __from_str_to_parseArgv(r->str,mycluster);
+    freeReplyObject(r);
+    
     __process_clusterInfo(mycluster);
 
     __assign_slots(mycluster);
@@ -337,9 +342,7 @@ static void __set_redirect(char* str){
 
 	s_port = (char*)malloc(sizeof(port)+1);
 	strcpy(s_port,port);
-#ifdef DEBUG
-	printf("get new ip = %s slot=%s port =%s\n",s_ip,s_slot,s_port);
-#endif
+
 	free(s_ip);
 	free(s_slot);
 	free(s_port);
@@ -349,6 +352,7 @@ static void __set_redirect(char* str){
 *calculate the slot, find the context, and then send command
 */
 static int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
+
 	redisContext *c = NULL;
 	int myslot;
 	myslot = crc16(key,strlen(key)) & 16383;
@@ -367,21 +371,23 @@ static int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
 	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, set_in_value);
 
 	if (r->type == REDIS_REPLY_STRING){
-
 		printf("set should not return str ?value = %s\n", r->str);
+                freeReplyObject(r);
 		return -1;
 	}else if(r->type == REDIS_REPLY_ERROR && !strncmp(r->str,"MOVED",5)){
 		printf("set still need redirection ? %s\n", r->str);
 		__set_redirect(r->str);
+                freeReplyObject(r);
 		return -1;
 	}else if(r->type == REDIS_REPLY_STATUS){
+                freeReplyObject(r);
                 sprintf(set_in_value,"%s",r->str);
 		return 0;
 	}else{
-	   printf("set error\n");
+	   printf("set error %s %d \n",__FILE__,__LINE__);
+           freeReplyObject(r);
 	   return -1;
 	}
-	freeReplyObject(r);
 }
 
 /*
@@ -397,13 +403,16 @@ static int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value
 	   printf("global set space already in use\n");
 	   return -1;
 	}
+
         char* localSetKey = global_setspace[localTid].setKey;
 	global_setspace[localTid].used=1;
 
-
 	sprintf(localSetKey,"%d\b%s",dbnum,key);
+
 	int re = __set_nodb(cluster,localSetKey,set_in_value);
+
 	global_setspace[localTid].used = 0;
+
 	return re;
 }
 
