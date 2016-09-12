@@ -14,11 +14,10 @@ char* benchmarkHelpVersion(){
 Malloc and initialize a benchmarkInfo struct.
 */
 
-benchmarkInfo* initBenchmark(){
+benchmarkInfo* initBenchmark(unsigned long init_count){
     //default values for benmarkInfo
     char *init_name ="file";
     unsigned short init_tid = 0;
-    unsigned long init_count = 100;
     unsigned int init_keyLen = 20;
     unsigned int init_valueLen = 20;
     unsigned long init_currentKvPairIndex = 0;

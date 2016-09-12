@@ -3,7 +3,7 @@
 #include"benchmarkHelp.h"
 
 void test_init_and_load() {
-    benchmarkInfo * benchmark = initBenchmark();     
+    benchmarkInfo * benchmark = initBenchmark(33);     
     benchmark = loadData(benchmark);
     int count = benchmark->count;
     int i;

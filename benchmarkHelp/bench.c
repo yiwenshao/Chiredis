@@ -116,7 +116,8 @@ void* __thread_pipeline_test(void *thread_input) {
     set_pipeline_count(mypipe,PIPE_TEST_COUNT);
     bind_pipeline_to_cluster(cluster,mypipe); 
     
-    benchmarkInfo *benchmark = initBenchmark();
+    //use the benchmark; 
+    benchmarkInfo *benchmark = initBenchmark(200);
     benchmark = loadData(benchmark);
     kvPair *tempPair;
     char *key,*value;
@@ -150,8 +151,10 @@ void* __thread_pipeline_test(void *thread_input) {
 
     char temp[11] = "123";
     sprintf(temp+3,"%d",my_tid);
+    //after benchmark
     setFileName(benchmark,temp);
     flushResults(benchmark);
+    
     disconnectDatabase(cluster);    
     return (void*)0;
 }

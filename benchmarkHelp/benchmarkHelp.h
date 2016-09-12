@@ -31,7 +31,7 @@ typedef struct benchmarkInfo{
     unsigned long currentResultIndex;
 }benchmarkInfo;
 
-benchmarkInfo* initBenchmark();
+benchmarkInfo* initBenchmark(unsigned long init_count);
 benchmarkInfo* loadData(benchmarkInfo* info);
 long long timeStamp();
 
