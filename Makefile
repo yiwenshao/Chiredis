@@ -6,7 +6,6 @@ OPT=$(OPTIMIZATION)
 CHIREDISCC=gcc $(OPT)$(STD)
 CHIREDISCC2=gcc $(STD)
 
-
 main: $(obj) 
 	$(CHIREDISCC) -o main $(obj) -l hiredis -lpthread
 	@touch libchiredis.so
@@ -20,7 +19,6 @@ my_bench.o: my_bench.c my_bench.h
 	$(CHIREDISCC2) -c my_bench.c
 
 .PHONY: install
-
 
 LIBOBJ=connect.c crc16.c
 LIBHEAD=connect.h

@@ -7,7 +7,7 @@
 #include <assert.h>
 
 #define CHECK_REPLY
-
+static char* CHIREDIS_VERSION = "1.0.2";
 //the following are a list of internal function that are not intended to be used outsize this file.
 static void __global_disconnect(clusterInfo* cluster);
 static clusterInfo* __connect_cluster(char* ip, int port);
@@ -20,7 +20,7 @@ static void __add_context_to_cluster(clusterInfo* mycluster);
 static void __print_clusterInfo_parsed(clusterInfo* mycluster);
 static void __remove_context_from_cluster(clusterInfo* mycluster);
 
-static char* CHIREDIS_VERSION = "1.0.2";
+
 
 static int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value);
 static int __set_withdb(clusterInfo* cluster,const char* key, char* set_in_value, int dbnum,int tid);
@@ -38,10 +38,10 @@ void get_chiredis_version() {
 
 
 /*
-*for testing purposes
+*list all the possible types of redisReply
 */
-int check_reply(redisReply* reply){
-     switch(reply->type){
+int check_reply(redisReply* reply) {
+     switch(reply->type) {
      case REDIS_REPLY_STATUS:
           return 0;
           break;
@@ -71,8 +71,8 @@ clusterInfo* connectRedis(char* ip, int port){
 }
 
 /*
-*use the globalContext to connect to the host specified by the user;
-*send cluster nodes command through this context;
+*use the globalContext to connect to the host specified by the user,
+*send "cluster nodes" command through this context,
 *receive the infomation and create clusterInfo struct,
 *which keeps connections to all nodes in the cluster.
 *
@@ -105,10 +105,11 @@ static clusterInfo* __connect_cluster(char* ip, int port){
 	}
 }
 
+/*
+If we want 
+*/
 static clusterInfo* __mallocClusterInfo() {
     clusterInfo* mycluster = (clusterInfo*)malloc(sizeof(clusterInfo));
-    
-
     return mycluster;
 }
 /*
@@ -128,27 +129,20 @@ static clusterInfo* __clusterInfo(redisContext* localContext){
     __from_str_to_parseArgv(r->str,mycluster);
     __process_clusterInfo(mycluster);
 
-#ifdef DEBUG
-    __print_clusterInfo_parsed(mycluster);
-#endif
     __assign_slots(mycluster);
-
-#ifdef DEBUG
-    __test_slot(mycluster);
-#endif
 
     __add_context_to_cluster(mycluster);
     return mycluster;
-
 }
 
 /*
 *command cluster nodes will return a str, which fall into n parts, one for each node in the 
-*cluster. this function add the strs to argv in clusterInfo struct, and set mycluster->len, which
+*cluster. This function converts the strs to argv in struct clusterInfo, and set mycluster->len, which
 *is the number of nodes in the cluster.
-*current version only support at most 500 masters in a cluster and it just ignore slaves.
+*Current version only support at most 500 masters in a cluster and it just ignores slaves.
 */
 static void __from_str_to_parseArgv(char * temp, clusterInfo* mycluster) {
+
     char * argv[500];
     int count = 0;
     char* point;
@@ -178,8 +172,9 @@ static void __from_str_to_parseArgv(char * temp, clusterInfo* mycluster) {
 
     mycluster->len = count;
 }
+
 /*
-*this function should be called after from_str_to_cluster.It parses the string for each node,and 
+*This function should be called after from_str_to_cluster.It parses the string for each node,and 
 *store the information in mycluster->parse[i]. the parse fild are pointers to  parseArgv struct,each
 *node in the cluster has exactly one such struct, which contains infomation such as ip,port,slot,context..
 */
@@ -244,6 +239,7 @@ static void __process_clusterInfo(clusterInfo* mycluster){
         mycluster->parse[i]->pipe_pending = 0;
     }
 }
+
 /*
 *print all the information about the cluster fro debuging.
 */
@@ -270,7 +266,9 @@ static void __test_slot(clusterInfo* mycluster){
     }
 }
 
-
+/*
+Assign slots to each node in the cluster. 
+*/
 static void __assign_slots(clusterInfo* mycluster){
     int len = mycluster->len;
     int i;
@@ -358,19 +356,14 @@ static int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
         parseArgv* tempArgv = ((parseArgv*)(cluster->slot_to_host[myslot]));
 
 	if(tempArgv->slots[myslot]!=1){
-#ifdef DEBUG
-	    printf("slot error in set // connect.c\n");
-	    //ignore this error currently
-#endif
+            //ignore the error here
 	}
 	if(tempArgv->context == NULL){
 	    printf("context = NULL in function set\n");
 	    return -1;
 	}
 	c = tempArgv->context;
-#ifdef DEBUG
-	printf("set start _____________________\n");
-#endif
+
 	redisReply *r = (redisReply *)redisCommand(c, "set %s %s", key, set_in_value);
 
 	if (r->type == REDIS_REPLY_STRING){
@@ -382,10 +375,6 @@ static int __set_nodb(clusterInfo* cluster,const char* key,char* set_in_value){
 		__set_redirect(r->str);
 		return -1;
 	}else if(r->type == REDIS_REPLY_STATUS){
-	        
-#ifdef DEBUG
-		printf("STATUS = %s\n",r->str);
-#endif
                 sprintf(set_in_value,"%s",r->str);
 		return 0;
 	}else{
@@ -427,7 +416,6 @@ int set(clusterInfo* cluster, const char *key,char *set_in_value,int dbnum,int t
 *get method without use db option. here const char* is not compitable with char*
 */
 static int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
-//        assert(get_in_value != NULL);
 	if(key==NULL){
 	   strcpy(get_in_value,"key is NULL");
 	   return -1;
@@ -455,9 +443,6 @@ static int __get_nodb(clusterInfo*cluster ,const char* key,char* get_in_value){
 	redisReply *r = (redisReply *)redisCommand(c, "get %s", key);
 
 	if (r->type == REDIS_REPLY_STRING) {
-#ifdef DEBUG
-		printf("%s = %s\n", key, r->str);
-#endif  
 		int len = strlen(r->str);
 		strcpy(get_in_value, r->str);
 		freeReplyObject(r);
@@ -516,14 +501,9 @@ int get(clusterInfo* cluster, const char *key, char *get_in_value,int dbnum,int 
       return  __get_withdb(cluster,key,get_in_value,dbnum,tid);
 }
 
-
-
-
 static void __remove_context_from_cluster(clusterInfo* mycluster){
    int len = mycluster-> len;
    int i = 0;
-   redisContext * tempContext;
-   
    for(i=0;i<len;i++){
       if(mycluster->parse[i]->context != NULL)      
            redisFree(mycluster->parse[i]->context);
@@ -531,14 +511,27 @@ static void __remove_context_from_cluster(clusterInfo* mycluster){
    }
 }
 
-static void __global_disconnect(clusterInfo* cluster){
+static void __global_disconnect(clusterInfo *cluster){
     if(cluster->globalContext !=NULL)
         redisFree(cluster->globalContext);
+}
+
+static void __free_clusterNodes_info(clusterInfo *cluster) {
+    int len = cluster->len;
+    int i;
+    for(i=0;i<len;i++){
+       if(cluster->argv[i] != NULL)
+           free(cluster->argv[i]);
+       if(cluster->parse[i] != NULL)
+           free(cluster->parse[i]);
+    }
 }
 
 void disconnectDatabase(clusterInfo* cluster){
     __global_disconnect(cluster);
     __remove_context_from_cluster(cluster);
+    __free_clusterNodes_info(cluster);
+    free(cluster);
 }
 
 
@@ -588,7 +581,7 @@ void init_global(){
      }
 }
 
-int release_global(){
+int release_global() {
      int i;
      for(i=0;i<99;i++){
         if(global_getspace[i].getKey != NULL)

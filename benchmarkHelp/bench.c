@@ -99,6 +99,7 @@ void test_with_multiple_threads(char*ip,int port) {
 #define PIPE_TEST_COUNT 20
 
 void* __thread_pipeline_test(void *thread_input) {
+
     char * ip = ((thread_struct*)thread_input)->in_ip;
     int port = ((thread_struct*)thread_input)->in_port;
     int my_tid = ((thread_struct*)thread_input)->tid;
@@ -194,4 +195,3 @@ int main(){
     test_pipeline_with_multiple_threads("192.168.1.22",6667);
     return 0;
 }
-
