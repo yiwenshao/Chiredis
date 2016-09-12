@@ -7,7 +7,7 @@ CHIREDISCC=gcc $(OPT)$(STD)
 CHIREDISCC2=gcc $(STD)
 
 main: $(obj) 
-	$(CHIREDISCC) -o main $(obj) -l hiredis -lpthread
+	$(CHIREDISCC) -o $@ $^ -l hiredis -lpthread
 	@touch libchiredis.so
 main.o: main.c connect.h
 	$(CHIREDISCC2) -c main.c
