@@ -20,7 +20,7 @@ typedef struct thread_struct {
 } thread_struct;
 
 
-void *__db_function(void* thread_input){
+void *__db_function(void* thread_input) {
   
   char * ip = ((thread_struct*)thread_input)->in_ip;
   int port = ((thread_struct*)thread_input)->in_port;
@@ -73,6 +73,8 @@ void *__db_function(void* thread_input){
      printf("all operations succeed!\n");
   else printf("operation fail\n");
 
+  free(key);
+  free(value);
   disconnectDatabase(cluster);
 
 }
@@ -111,10 +113,12 @@ void test_with_multiple_threads(char*ip,int port) {
      }
   }
 
+  release_global();
+
 }
 
 
 int main(){
-    test_with_multiple_threads("192.168.1.22",6667);   
+    test_with_multiple_threads("192.168.1.22",6667);
     return 0;
 }
