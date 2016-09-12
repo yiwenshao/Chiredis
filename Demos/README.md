@@ -2,5 +2,5 @@
 
 + PipelineCluster.c
 This demo shows how to use pipeline in cluster mode. 
-use gcc -o PipelineCluster PipelineCluster.c -l hiredis -l chiredis to compile.
+use gcc -o PipelineCluster PipelineCluster.c -l hiredis -l chiredis, or make PipelineCluster to compile.
 
