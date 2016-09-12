@@ -101,7 +101,7 @@ benchmarkInfo* loadData(benchmarkInfo* info){
     return info;
 }
 
-long long timeStamp() {
+long long us_time() {
     struct timeval tv;
     long long ust;
     gettimeofday(&tv, NULL);
@@ -109,6 +109,28 @@ long long timeStamp() {
     ust += tv.tv_usec;
     return ust;
 }
+
+
+long long ms_time() {
+    struct timeval tv;
+    long long mst;
+
+    gettimeofday(&tv, NULL);
+    mst = ((long long)tv.tv_sec)*1000;
+    mst += tv.tv_usec/1000;
+    return mst;
+}
+
+long long s_time() {
+    struct timeval tv;
+    long long st;
+    gettimeofday(&tv,NULL);
+    st = (long long)tv.tv_sec;
+    st += tv.tv_usec/1000000;
+    return st;
+}
+
+
 
 void addDuration(benchmarkInfo *benchmark,long long duration){
     unsigned long count = benchmark->count;

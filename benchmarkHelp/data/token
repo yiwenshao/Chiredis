@@ -1,0 +1,1 @@
+gcc -o bench bench.c benchmarkHelp.c -lchiredis -lhiredis -lpthread

@@ -39,15 +39,15 @@ void *__db_function(void* thread_input){
 	exit(0);
   }
    
-  benchmarkInfo* benchmark = initBenchmark(); 
+  benchmarkInfo* benchmark = initBenchmark(1); 
   benchmark = loadData(benchmark);
   unsigned long count = benchmark->count;
   kvPair* tempPair;
   for(unsigned long i=0;i<count;i++){
-      long long start = timeStamp();
+      long long start = us_time();
       tempPair = getKvPair(benchmark);
       set(cluster,tempPair->key,tempPair->value,1,my_tid);
-      long long end = timeStamp();
+      long long end = us_time();
       addDuration(benchmark,end - start);
   }
   char temp[11] = "123";
@@ -96,6 +96,8 @@ void test_with_multiple_threads(char*ip,int port) {
 
 }
 
+
+
 #define PIPE_TEST_COUNT 20
 
 void* __thread_pipeline_test(void *thread_input) {
@@ -103,7 +105,7 @@ void* __thread_pipeline_test(void *thread_input) {
     char * ip = ((thread_struct*)thread_input)->in_ip;
     int port = ((thread_struct*)thread_input)->in_port;
     int my_tid = ((thread_struct*)thread_input)->tid;
-    clusterInfo *cluster = connectRedis("192.168.1.22",6667);
+    clusterInfo *cluster = connectRedis("192.168.0.3",6667);
 
     if(cluster == NULL) {
         printf("unable to connect to cluster\n");
@@ -117,15 +119,15 @@ void* __thread_pipeline_test(void *thread_input) {
     bind_pipeline_to_cluster(cluster,mypipe); 
     
     //use the benchmark; 
-    benchmarkInfo *benchmark = initBenchmark(200);
+    benchmarkInfo *benchmark = initBenchmark(500000);
     benchmark = loadData(benchmark);
     kvPair *tempPair;
     char *key,*value;
     int count = 0;
      
-    for(int i=0;i<5;i++) {
+    for(int i=0;i<25000;i++) {
         count = 0;
-        long long start = timeStamp();
+        long long start = us_time();
         while(count<PIPE_TEST_COUNT){
             tempPair = getKvPair(benchmark);
             key = tempPair->key;
@@ -145,7 +147,7 @@ void* __thread_pipeline_test(void *thread_input) {
         }
         cluster_pipeline_complete(cluster,mypipe);
         reset_pipeline_count(mypipe,PIPE_TEST_COUNT);
-        long long end = timeStamp();
+        long long end = us_time();
         addDuration(benchmark,end-start);
     }
 

@@ -33,7 +33,9 @@ typedef struct benchmarkInfo{
 
 benchmarkInfo* initBenchmark(unsigned long init_count);
 benchmarkInfo* loadData(benchmarkInfo* info);
-long long timeStamp();
+long long us_time();
+long long ms_time();
+long long s_time();
 
 void addDuration();
 
