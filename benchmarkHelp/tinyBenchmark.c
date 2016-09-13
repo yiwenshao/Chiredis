@@ -208,10 +208,17 @@ void test_pipeline_with_multiple_threads (char *ip,int port) {
     }
 }
 
-int main(){
+int main(int argc, char ** argv){
+    if(argc <2 ){
+        printf("argc < 2\n");
+        return 0;
+    }
+    char *ip = argv[1];
+    int port = atoi(argv[2]);
+    printf("ip=%s port=%d\n",ip,port);
 
     //test_with_multiple_threads("192.168.1.22",6667);
-    test_pipeline_with_multiple_threads("192.168.1.22",6667);
+    //test_pipeline_with_multiple_threads("192.168.1.22",6667);
     return 0;
 
 }
