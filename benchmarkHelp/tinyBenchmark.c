@@ -44,7 +44,8 @@ void *__db_function(void* thread_input){
   benchmark = loadData(benchmark);
   unsigned long count = benchmark->count;
   kvPair* tempPair;
-  for(unsigned long i=0;i<count;i++){
+  unsigned long i;
+  for(i=0;i<count;i++){
       long long start = us_time();
       tempPair = getKvPair(benchmark);
       set(cluster,tempPair->key,tempPair->value,1,my_tid);
@@ -108,7 +109,8 @@ void* __thread_pipeline_test(void *thread_input) {
     char * ip = ((thread_struct*)thread_input)->in_ip;
     int port = ((thread_struct*)thread_input)->in_port;
     int my_tid = ((thread_struct*)thread_input)->tid;
-    clusterInfo *cluster = connectRedis("192.168.0.3",6667);
+    clusterInfo *cluster = connectRedis(ip,port);
+    benchmarkConfig * bc = ((thread_struct*)thread_input)->bc;
 
     if(cluster == NULL) {
         printf("unable to connect to cluster\n");
@@ -122,13 +124,14 @@ void* __thread_pipeline_test(void *thread_input) {
     bind_pipeline_to_cluster(cluster,mypipe); 
     
     //use the benchmark; 
-    benchmarkInfo *benchmark = initBenchmark(500000);
+    benchmarkInfo *benchmark = initBenchmark(bc->totalCount);
     benchmark = loadData(benchmark);
     kvPair *tempPair;
     char *key,*value;
     int count = 0;
-     
-    for(int i=0;i<25000;i++) {
+    unsigned long i;
+    unsigned long loop_pipe = bc->totalCount/PIPE_TEST_COUNT;
+    for(i=0;i<loop_pipe;i++) {
         count = 0;
         long long start = us_time();
         while(count<PIPE_TEST_COUNT){
@@ -143,7 +146,7 @@ void* __thread_pipeline_test(void *thread_input) {
         for(;inner<PIPE_TEST_COUNT;inner++){
                 redisReply *reply = cluster_pipeline_getReply(cluster,mypipe);
                 if(reply == NULL) {
-                    printf("NULL reply in %d\n",i);
+                    printf("NULL reply in %lu\n",i);
                 } else {
                     freeReplyObject(reply);
                 }
