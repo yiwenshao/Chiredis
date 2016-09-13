@@ -10,7 +10,7 @@ typedef struct thread_struct {
   char* in_ip;
   int in_port;
   int tid;
-  int step;
+  benchmarkConfig *bc;
 } thread_struct;
 
 static void *__db_function(void* thread_struct);
@@ -34,6 +34,7 @@ void *__db_function(void* thread_input){
   if(cluster!=NULL){
       printf("connected to cluster\n");
   }
+
   else{ 
   	printf("cluster==null\n");
 	exit(0);
@@ -164,22 +165,32 @@ void* __thread_pipeline_test(void *thread_input) {
 }
 
 void test_pipeline_with_multiple_threads (char *ip,int port) {
-    pthread_t th[16];
+    benchmarkConfig * bc = init_config();
+    
+    int thread_count = bc->threadCount;
+    pthread_t *th = (pthread_t*)malloc(sizeof(pthread_t)*thread_count);
+    if(th == NULL){
+        printf("malloc fail %s %d\n",__FILE__,__LINE__);
+        return ;
+    }
     int res, i;
     char local_ip[30];
     strncpy(local_ip,ip,25);
-    thread_struct thread_input[16];
 
-    int step = 1000;
+
+    thread_struct *thread_input = (thread_struct*)malloc(sizeof(thread_struct)*thread_count);
+    if(thread_input == NULL){
+        printf("malloc fail %s %d\n",__FILE__,__LINE__);
+        return ;
+    }
     
-    for(i=0;i<16;i++) {
+    for(i=0;i<thread_count;i++) {
         thread_input[i].in_ip = local_ip;
         thread_input[i].in_port = port;
-        thread_input[i].tid = (i+1)*step;
-        thread_input[i].step = step;
+        thread_input[i].tid = (i+1);
     }
 
-    for(i=0;i<16;i++) { 
+    for(i=0;i<thread_count;i++) { 
         res = pthread_create(&th[i],NULL,__thread_pipeline_test,(void*)(&thread_input[i]));
         if(res!=0) {
             printf("thread fail\n");
@@ -188,7 +199,7 @@ void test_pipeline_with_multiple_threads (char *ip,int port) {
     }
 
     void* thread_result;
-    for(i=0;i<16;i++) { 
+    for(i=0;i<thread_count;i++) { 
     res = pthread_join(th[i],&thread_result);
         if(res!=0) {
             printf("thread join fail\n");
@@ -200,7 +211,7 @@ void test_pipeline_with_multiple_threads (char *ip,int port) {
 int main(){
 
     //test_with_multiple_threads("192.168.1.22",6667);
-    //test_pipeline_with_multiple_threads("192.168.1.22",6667);
+    test_pipeline_with_multiple_threads("192.168.1.22",6667);
     return 0;
 
 }
