@@ -33,18 +33,21 @@ void *__db_function(void* thread_input){
 
   if(cluster!=NULL){
       printf("connected to cluster\n");
-  }
-
-  else{ 
+  }else{ 
   	printf("cluster==null\n");
 	exit(0);
   }
+  benchmarkConfig *bc = ((thread_struct*)thread_input)->bc;
+  if(my_tid == 1)
+      show_config(bc);
+
    
-  benchmarkInfo* benchmark = initBenchmark(1); 
+  benchmarkInfo* benchmark = initBenchmark(bc->totalCount); 
   benchmark = loadData(benchmark);
   unsigned long count = benchmark->count;
   kvPair* tempPair;
   unsigned long i;
+  
   for(i=0;i<count;i++){
       long long start = us_time();
       tempPair = getKvPair(benchmark);
@@ -52,53 +55,65 @@ void *__db_function(void* thread_input){
       long long end = us_time();
       addDuration(benchmark,end - start);
   }
-  char temp[11] = "123";
+  char temp[11] = "nor";
   sprintf(temp+3,"%d",my_tid);
   setFileName(benchmark,temp);
   disconnectDatabase(cluster);
   flushResults(benchmark); 
   printf("success\n");
+
 }
 
 
-/*
-*this test uses interface with db number and globally shared space.
-*/
 
-void test_with_multiple_threads(char*ip,int port) {
- pthread_t th[16];
- int res, i;
- char local_ip[30];
- strncpy(local_ip,ip,25);
- thread_struct thread_input[16];
-
- for(i=0;i<16;i++) {
-    thread_input[i].in_ip = local_ip;
-    thread_input[i].in_port = port;
-    thread_input[i].tid = i;
- }
-
- init_global();//shared memory which allows less than 16 threads
-
- int thread[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
- for(i=0;i<16;i++){ 
-   res = pthread_create(&th[i],NULL,__db_function,(void*)(&thread_input[i]));
-   if(res!=0){
-      printf("thread fail\n");
-      break;
-   }
- }
-
- void* thread_result;
- for(i=0;i<16;i++){ 
-   res = pthread_join(th[i],&thread_result);
-   if(res!=0){
-      printf("thread join fail\n");
-      break;
-     }
-  }
+void test_normal_with_multiple_threads (char *ip,int port) {
+    benchmarkConfig * bc = init_config();
     
+    int thread_count = bc->threadCount;
+    pthread_t *th = (pthread_t*)malloc(sizeof(pthread_t)*thread_count);
+    if(th == NULL){
+        printf("malloc fail %s %d\n",__FILE__,__LINE__);
+        return ;
+    }
+    int res, i;
+    char local_ip[30];
+    strncpy(local_ip,ip,25);
+
+
+    thread_struct *thread_input = (thread_struct*)malloc(sizeof(thread_struct)*thread_count);
+    if(thread_input == NULL){
+        printf("malloc fail %s %d\n",__FILE__,__LINE__);
+        return ;
+    }
+    
+    for(i=0;i<thread_count;i++) {
+        thread_input[i].in_ip = local_ip;
+        thread_input[i].in_port = port;
+        thread_input[i].tid = (i+1);
+        thread_input[i].bc = bc;
+    }
+    init_global();
+
+    for(i=0;i<thread_count;i++) { 
+        res = pthread_create(&th[i],NULL,__db_function,(void*)(&thread_input[i]));
+        if(res!=0) {
+            printf("thread fail\n");
+            break;
+        }
+    }
+
+    void* thread_result;
+    for(i=0;i<thread_count;i++) { 
+    res = pthread_join(th[i],&thread_result);
+        if(res!=0) {
+            printf("thread join fail\n");
+            break;
+        }
+    }
 }
+
+
+
 
 
 
@@ -161,7 +176,7 @@ void* __thread_pipeline_test(void *thread_input) {
         addDuration(benchmark,end-start);
     }
 
-    char temp[11] = "123";
+    char temp[11] = "pip";
     sprintf(temp+3,"%d",my_tid);
     //after benchmark
     setFileName(benchmark,temp);
@@ -170,6 +185,7 @@ void* __thread_pipeline_test(void *thread_input) {
     disconnectDatabase(cluster); 
     return (void*)0;
 }
+
 
 void test_pipeline_with_multiple_threads (char *ip,int port) {
     benchmarkConfig * bc = init_config();
@@ -216,6 +232,8 @@ void test_pipeline_with_multiple_threads (char *ip,int port) {
     }
 }
 
+
+
 int main(int argc, char ** argv){
     if(argc <2 ){
         printf("argc < 2\n");
@@ -225,8 +243,19 @@ int main(int argc, char ** argv){
     int port = atoi(argv[2]);
     printf("ip=%s port=%d\n",ip,port);
 
-    //test_with_multiple_threads("192.168.1.22",6667);
-  test_pipeline_with_multiple_threads("192.168.1.22",6667);
-    return 0;
+    if(argc >4 ){
+        if(strcasecmp(argv[3],"-s")==0){
+            if(strcasecmp(argv[4],"pipeline")==0){
+                printf("start pipeline test\n");
+                test_pipeline_with_multiple_threads(ip,port);
+            }else if(strcasecmp(argv[4],"normal")==0){
+                printf("start normal test\n");
+                test_normal_with_multiple_threads(ip,port);
+            }else{
+                printf("unknown test %s\n",argv[4]);
+            }
+        }
+    }
 
+    return 0;
 }
