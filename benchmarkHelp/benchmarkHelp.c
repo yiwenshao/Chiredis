@@ -178,3 +178,72 @@ void setFileName(benchmarkInfo *benchmark, char* name){
         printf("unable to open file %s\n",benchmark->name);
     }
 }
+
+static void __process_kv_config(benchmarkConfig *config, char *key, char *value) {
+    if(strcasecmp(key,"keylen")==0) {
+        unsigned int keyLen;
+        keyLen = strtoul(value,&key,10);
+        config->keyLen = keyLen;
+    }else if(strcasecmp(key,"valuelen")==0) {
+        unsigned int valueLen;
+        valueLen = strtoul(value,&key,10);
+        config->valueLen = valueLen;
+    }else if(strcasecmp(key,"totalcount")==0){
+        unsigned long totalCount;
+        totalCount = strtoul(value,&key,10);
+        config->totalCount = totalCount;
+    }else if(strcasecmp(key,"threadcount")==0){
+        int threadCount;
+        threadCount = atoi(value);
+        config->threadCount = threadCount;
+    }else{
+        printf("error\n");
+    }
+}
+
+void show_config(benchmarkConfig *config) {
+    printf("totalCount=%lu\nkeyLen=%u\nvalueLen=%u\nthreadCount=%d\n",config->totalCount,\
+          config->keyLen, config->valueLen, config->threadCount);
+}
+
+
+benchmarkConfig *init_config() {
+    benchmarkConfig * config = (benchmarkConfig*)malloc(sizeof(benchmarkConfig));
+    if(config == NULL){
+        printf("malloc fail %s %d\n",__FILE__,__LINE__);
+    }
+//initialize with default values
+    config->totalCount = 20;
+    config->keyLen = 128;
+    config->valueLen = 128;
+    config->threadCount = 16;
+
+    FILE *fp;
+    fp=fopen("./benchmarkConfig/benchmark.config","r");
+    char *buf;
+    if(fp == NULL){
+        printf("file not found %s %d\n",__FILE__,__LINE__);
+    }
+    int size;
+    size_t len = 0;
+    char key[255],value[255];
+
+    while((size=getline(&buf,&len,fp))!=-1) {
+        char * point_to_equal; 
+        if(size == 1 || (point_to_equal = strchr(buf,'=')) == NULL)
+            continue;
+        int key_size = point_to_equal - buf;
+
+        //parse key and value
+        strncpy(key,buf,key_size);
+        key[key_size]='\0';
+        strncpy(value,buf+key_size+1,size-key_size-2);
+        value[size-key_size-2]='\0';
+        __process_kv_config(config,key,value);
+    }
+
+    free(buf);
+    fclose(fp);
+
+    return config;
+}

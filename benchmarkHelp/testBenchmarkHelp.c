@@ -24,8 +24,14 @@ void test_init_and_load() {
     flushResults(benchmark);
 }
 
+void test_config(){
+    benchmarkConfig * bc = init_config();
+    show_config(bc);    
 
+
+}
 int main(){
-   test_init_and_load();
-   return 0;
+   //test_init_and_load();
+    test_config();
+    return 0;
 }

@@ -58,9 +58,11 @@ void *__db_function(void* thread_input){
   printf("success\n");
 }
 
+
 /*
 *this test uses interface with db number and globally shared space.
 */
+
 void test_with_multiple_threads(char*ip,int port) {
  pthread_t th[16];
  int res, i;
@@ -93,7 +95,7 @@ void test_with_multiple_threads(char*ip,int port) {
       break;
      }
   }
-
+    
 }
 
 
@@ -196,7 +198,9 @@ void test_pipeline_with_multiple_threads (char *ip,int port) {
 }
 
 int main(){
+
     //test_with_multiple_threads("192.168.1.22",6667);
-    test_pipeline_with_multiple_threads("192.168.1.22",6667);
+    //test_pipeline_with_multiple_threads("192.168.1.22",6667);
     return 0;
+
 }

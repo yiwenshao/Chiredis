@@ -31,6 +31,14 @@ typedef struct benchmarkInfo{
     unsigned long currentResultIndex;
 }benchmarkInfo;
 
+typedef struct benchmarkConfig{
+    unsigned long totalCount;
+    unsigned int keyLen;
+    unsigned int valueLen;
+    int threadCount;
+}benchmarkConfig;
+
+
 benchmarkInfo* initBenchmark(unsigned long init_count);
 benchmarkInfo* loadData(benchmarkInfo* info);
 long long us_time();
@@ -46,4 +54,8 @@ void flushResults();
 kvPair* getKvPair(benchmarkInfo* benchmark);
 
 void setFileName(benchmarkInfo* benchmark,char* name);
+
+benchmarkConfig *init_config();
+
+void show_config();
 #endif
