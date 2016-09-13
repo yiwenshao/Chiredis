@@ -109,8 +109,11 @@ void* __thread_pipeline_test(void *thread_input) {
     char * ip = ((thread_struct*)thread_input)->in_ip;
     int port = ((thread_struct*)thread_input)->in_port;
     int my_tid = ((thread_struct*)thread_input)->tid;
+    printf("start to connect %d %s %d\n",my_tid,ip,port);
     clusterInfo *cluster = connectRedis(ip,port);
-    benchmarkConfig * bc = ((thread_struct*)thread_input)->bc;
+    benchmarkConfig *bc = ((thread_struct*)thread_input)->bc;
+    if(my_tid == 1)
+        show_config(bc);
 
     if(cluster == NULL) {
         printf("unable to connect to cluster\n");
@@ -131,6 +134,7 @@ void* __thread_pipeline_test(void *thread_input) {
     int count = 0;
     unsigned long i;
     unsigned long loop_pipe = bc->totalCount/PIPE_TEST_COUNT;
+
     for(i=0;i<loop_pipe;i++) {
         count = 0;
         long long start = us_time();
@@ -163,7 +167,7 @@ void* __thread_pipeline_test(void *thread_input) {
     setFileName(benchmark,temp);
     flushResults(benchmark);
     
-    disconnectDatabase(cluster);    
+    disconnectDatabase(cluster); 
     return (void*)0;
 }
 
@@ -191,6 +195,7 @@ void test_pipeline_with_multiple_threads (char *ip,int port) {
         thread_input[i].in_ip = local_ip;
         thread_input[i].in_port = port;
         thread_input[i].tid = (i+1);
+        thread_input[i].bc = bc;
     }
 
     for(i=0;i<thread_count;i++) { 
@@ -221,7 +226,7 @@ int main(int argc, char ** argv){
     printf("ip=%s port=%d\n",ip,port);
 
     //test_with_multiple_threads("192.168.1.22",6667);
-    //test_pipeline_with_multiple_threads("192.168.1.22",6667);
+  test_pipeline_with_multiple_threads("192.168.1.22",6667);
     return 0;
 
 }
