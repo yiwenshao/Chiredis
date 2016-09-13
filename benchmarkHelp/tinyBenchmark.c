@@ -48,6 +48,7 @@ void *__db_function(void* thread_input){
   kvPair* tempPair;
   unsigned long i;
   
+  long long total_start = s_time();
   for(i=0;i<count;i++){
       long long start = us_time();
       tempPair = getKvPair(benchmark);
@@ -55,13 +56,14 @@ void *__db_function(void* thread_input){
       long long end = us_time();
       addDuration(benchmark,end - start);
   }
+  long long total_end = s_time();
   char temp[11] = "nor";
   sprintf(temp+3,"%d",my_tid);
   setFileName(benchmark,temp);
-  disconnectDatabase(cluster);
   flushResults(benchmark); 
-  printf("success\n");
-
+  disconnectDatabase(cluster);
+  printf("normal_mod: tid=%d total_time=%lld\n",my_tid,total_end - total_start);
+  return (void*)0;
 }
 
 
@@ -133,7 +135,7 @@ void* __thread_pipeline_test(void *thread_input) {
     if(cluster == NULL) {
         printf("unable to connect to cluster\n");
     }else {
-        printf("connection succeed\n");
+        //printf("connection succeed\n");
     }
 
     //three steps before using a cluster mode pipeline
@@ -150,6 +152,7 @@ void* __thread_pipeline_test(void *thread_input) {
     unsigned long i;
     unsigned long loop_pipe = bc->totalCount/PIPE_TEST_COUNT;
 
+    long long total_start = s_time();
     for(i=0;i<loop_pipe;i++) {
         count = 0;
         long long start = us_time();
@@ -160,6 +163,7 @@ void* __thread_pipeline_test(void *thread_input) {
             cluster_pipeline_set(cluster,mypipe,key,value);
             count++;
         }
+
         cluster_pipeline_flushBuffer(cluster,mypipe);
         int inner = 0;
         for(;inner<PIPE_TEST_COUNT;inner++){
@@ -175,6 +179,7 @@ void* __thread_pipeline_test(void *thread_input) {
         long long end = us_time();
         addDuration(benchmark,end-start);
     }
+    long long total_end = s_time();
 
     char temp[11] = "pip";
     sprintf(temp+3,"%d",my_tid);
@@ -182,7 +187,8 @@ void* __thread_pipeline_test(void *thread_input) {
     setFileName(benchmark,temp);
     flushResults(benchmark);
     
-    disconnectDatabase(cluster); 
+    disconnectDatabase(cluster);
+    printf("pipeline_mode: tid=%d total_time=%lld\n",my_tid,total_end - total_start);
     return (void*)0;
 }
 
