@@ -3,6 +3,7 @@ ALL_TARGET=connect_and_disconnect example multi_nopipe PipelineCluster version
 
 
 .PHONY: ALL
+
 ALL: $(ALL_TARGET)
 
 connect_and_disconnect: connect_and_disconnect.c
@@ -18,6 +19,7 @@ PipelineCluster: PipelineCluster.c
 	gcc -o $@ $^ $(COMMON_LIBS)
 version: version.c
 	gcc -o $@ $^ $(COMMON_LIBS)
+
 .PHONY: clean
 clean:
 	-rm $(ALL_TARGET)

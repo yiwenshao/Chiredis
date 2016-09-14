@@ -73,11 +73,13 @@ int main(){
             printf("NULL reply\n");
             continue;
         }
+
         if(reply->type == REDIS_REPLY_NIL){
             printf("nil\n");
         }else {
             printf("%s\n",reply->str);
         }
+
         freeReplyObject(reply);
     }
 

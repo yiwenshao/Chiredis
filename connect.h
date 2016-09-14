@@ -124,7 +124,7 @@ typedef struct clusterPipe{
 //we get the replies from pipe_reply_buffer, using front and end pointers
     int reply_index_front;
     int reply_index_end;
-//
+
     int send_slot[MAX_PIPE_COUNT];
 //one pipeline buffer for one cluster
     clusterInfo* cluster;

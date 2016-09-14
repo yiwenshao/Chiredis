@@ -239,7 +239,6 @@ void test_pipeline_with_multiple_threads (char *ip,int port) {
 }
 
 
-
 int main(int argc, char ** argv){
     if(argc <2 ){
         printf("argc < 2\n");
@@ -262,6 +261,5 @@ int main(int argc, char ** argv){
             }
         }
     }
-
     return 0;
 }
