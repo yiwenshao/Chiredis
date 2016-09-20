@@ -31,7 +31,7 @@ static void* __thread_worker(void *thread_input) {
     }
 
     long long total_end = s_time();
-    localFunction->end_out = localFunction->end(thread_input,localFunction->end_in);
+    localFunction->end_out = localFunction->end(thread_input,thread_prepare_out);
     char temp[11] = "pip";
     sprintf(temp+3,"%d",my_tid);
     //after benchmark

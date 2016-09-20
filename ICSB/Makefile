@@ -7,9 +7,6 @@ normal: normal.c benchmarkHelp.c
 test: testBenchmarkHelp.c benchmarkHelp.c
 	gcc -o $@ $^
 
-token: token.c benchmarkHelp.c dbTest.c
-	gcc -o $@ $^ -lpthread -lchiredis -lhiredis
-
 target: $(source) benchmarkHelp.c dbTest.c
 	gcc -o $@ $^ -lpthread $(depend)
 

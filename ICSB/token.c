@@ -15,7 +15,11 @@ void *init(void* myinput) {
 //TODO:
 void *prepare(void *thread_input,void* myinput){
     printf("prepare\n");
-    clusterInfo *cluster = connectRedis("192.168.1.22",6667);
+    thread_struct *ts = (thread_struct*)thread_input;
+    int port = ts->in_port;
+    char *ip = ts->in_ip;
+    clusterInfo *cluster = connectRedis(ip,port);
+
     if(cluster == NULL)
         return NULL;
     //this will be transmitted to operation 
@@ -25,6 +29,7 @@ void *prepare(void *thread_input,void* myinput){
 
 //TODO:
 void *operation(void *kv,void* thread_input,void *prepare_out) {
+
     kvPair* lkv = (kvPair*)kv;
     int tid = ((thread_struct*)thread_input)->tid;
     clusterInfo *cluster = (clusterInfo*)prepare_out;
@@ -37,8 +42,10 @@ void *operation(void *kv,void* thread_input,void *prepare_out) {
 
 
 //TODO:
-void *end(void *thread_input,void* input){
+void *end(void *thread_input,void* prepare_out){
     printf("end\n");
+    clusterInfo *cluster = (clusterInfo*)prepare_out;
+    disconnectDatabase(cluster);
     return (void*)0;
 }
 
@@ -55,7 +62,7 @@ int main() {
     functions->operation = operation;
     functions->end = end;
     
-    startTest("192.168.1.1",6666,functions);
+    startTest("192.168.1.22",6667,functions);
 
     return 0;
 }
