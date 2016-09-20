@@ -13,8 +13,8 @@ typedef struct thread_struct {
   benchmarkConfig *bc;
 } thread_struct;
 
-static void *__db_function(void* thread_struct);
 static void *__thread_pipeline_test(void* thread_struct);
+static void *__db_function(void* thread_input);
 
 /*
 this function is tested, and it is intended to be used in pthread_create
@@ -23,7 +23,7 @@ para2: port
 para3: thread id
 */
 
-void *__db_function(void* thread_input){
+void *__db_function (void* thread_input){
   
   char * ip = ((thread_struct*)thread_input)->in_ip;
   int port = ((thread_struct*)thread_input)->in_port;
@@ -113,6 +113,11 @@ void test_normal_with_multiple_threads (char *ip,int port) {
         }
     }
 }
+
+
+
+
+
 
 
 
@@ -263,3 +268,4 @@ int main(int argc, char ** argv){
     }
     return 0;
 }
+

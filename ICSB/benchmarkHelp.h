@@ -1,17 +1,18 @@
 #ifndef BENCHMARK_HELP
 #define BENCHMARK_HELP
+
 char* benchmarkHelpVersion();
 
-typedef struct kvPair{
+typedef struct kvPair {
     char* key;
     char* value;
-}kvPair;
+} kvPair;
 
-typedef struct results{
+typedef struct results {
     long long duration_miliseconds;
-}results;
+} results;
 
-typedef struct benchmarkInfo{
+typedef struct benchmarkInfo {
     //name of the benchmark
     char name[50];
     //thread id, intended for multi-threading uses
@@ -29,7 +30,7 @@ typedef struct benchmarkInfo{
     //current index of kvPairToUse, use it to fetch a pointer to kvPair
     unsigned long currentKvPairIndex;
     unsigned long currentResultIndex;
-}benchmarkInfo;
+} benchmarkInfo;
 
 typedef struct benchmarkConfig{
     unsigned long totalCount;
@@ -37,7 +38,6 @@ typedef struct benchmarkConfig{
     unsigned int valueLen;
     int threadCount;
 }benchmarkConfig;
-
 
 benchmarkInfo* initBenchmark(unsigned long init_count);
 benchmarkInfo* loadData(benchmarkInfo* info);

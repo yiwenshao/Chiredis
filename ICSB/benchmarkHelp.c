@@ -3,8 +3,13 @@
 #include<string.h>
 #include<sys/time.h>
 #include<unistd.h>
-
+#include<sys/types.h>
+#include<dirent.h>
+#include<errno.h>
+#include<sys/stat.h>
 #include"benchmarkHelp.h"
+
+static void __process_kv_config (benchmarkConfig *config, char *key, char *value);
 
 char* benchmarkHelpVersion(){
     return "benchmarkHelp version 1.0";
@@ -172,14 +177,25 @@ kvPair* getKvPair(benchmarkInfo* benchmark){
 }
 
 void setFileName(benchmarkInfo *benchmark, char* name){
+    DIR* dataDir = opendir("data");
+    if(dataDir){
+        //exists
+        closedir(dataDir);
+    }else if(ENOENT == errno){
+        mkdir("data",04771);
+        //no exists
+    }else{
+        //other reasons
+    }
+
     sprintf(benchmark->name,"./data/d_%s",name);
-    benchmark->flushFile = fopen(benchmark->name,"a");
+    benchmark->flushFile = fopen(benchmark->name,"w");
     if(benchmark->flushFile == NULL){
         printf("unable to open file %s\n",benchmark->name);
     }
 }
 
-static void __process_kv_config(benchmarkConfig *config, char *key, char *value) {
+static void __process_kv_config (benchmarkConfig *config, char *key, char *value) {
     if(strcasecmp(key,"keylen")==0) {
         unsigned int keyLen;
         keyLen = strtoul(value,&key,10);
@@ -197,8 +213,7 @@ static void __process_kv_config(benchmarkConfig *config, char *key, char *value)
         threadCount = atoi(value);
         config->threadCount = threadCount;
     }else{
-        printf("error\n");
-    }
+        printf("error key = %s %s %d \n",key,__FILE__,__LINE__); }
 }
 
 void show_config(benchmarkConfig *config) {
@@ -230,7 +245,7 @@ benchmarkConfig *init_config() {
 
     while((size=getline(&buf,&len,fp))!=-1) {
         char * point_to_equal; 
-        if(size == 1 || (point_to_equal = strchr(buf,'=')) == NULL)
+        if(size == 1 || (point_to_equal = strchr(buf,'=')) == NULL||buf[0]=='#')
             continue;
         int key_size = point_to_equal - buf;
 

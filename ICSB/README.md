@@ -9,3 +9,8 @@ It provides some help functions for testing.
     to put the duration into an array
 4.flush
     flush data into disk for furthur analysis
+
+How to use ?
+1. mordify token.c
+2. make target source=token.c depend="-lchiredis -lhiredis"
+3. enjoy you benchmark
