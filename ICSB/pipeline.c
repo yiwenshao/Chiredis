@@ -76,7 +76,6 @@ void *operation(void *kv,void* thread_input,void *prepare_out) {
     return (void*)0;
 }
 
-
 //TODO:
 void *end(void *thread_input,void* prepare_out){
     printf("end\n");
@@ -86,7 +85,14 @@ void *end(void *thread_input,void* prepare_out){
 }
 
 
-int main() {
+int main(int argc, char ** argv) {
+    if(argc < 2){
+        printf("argc < 2\n");
+    }
+    
+    char * ip = argv[1];
+    int port = atoi(argv[2]);
+
     functionStruct *functions= (functionStruct*)malloc(sizeof(functionStruct));
     if(functions == NULL){
         printf("error malloc\n");
@@ -98,7 +104,6 @@ int main() {
     functions->operation = operation;
     functions->end = end;
     
-    startTest("192.168.1.22",6667,functions);
-
+    startTest(ip,port,functions);
     return 0;
 }

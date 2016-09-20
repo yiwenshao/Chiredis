@@ -134,6 +134,11 @@ typedef struct clusterPipe{
 //the first reply, thus getting the replies in order
     redisReply* pipe_reply_buffer[MAX_PIPE_COUNT];
 }clusterPipe;
+
+typedef struct clusterPipelineReply{
+    redisReply * reply;
+}clusterPipelineReply;
+
 //initialize a pipeline structure
 clusterPipe* get_pipeline();
 int set_pipeline_count(clusterPipe* mypipe,int n);
@@ -154,4 +159,7 @@ int cluster_pipeline_flushBuffer(clusterInfo *cluster,clusterPipe *mypipe);
 int reset_pipeline_count(clusterPipe* mypipe, int n);
 
 int release_pipeline(clusterPipe* mypipe);
+
+
+
 #endif

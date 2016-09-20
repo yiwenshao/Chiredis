@@ -1,13 +1,11 @@
 ip="192.168.1.22"
 port=6667
 
-
 function prepare {
     mkdir data
     rm -rf ./data/*
     make
 }
-
 
 if [ $# < 1 ];then
     echo $#
