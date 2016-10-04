@@ -1,7 +1,7 @@
-## Chiredis
+## hiredis-cluster
 
-Chiredis is a redis client library written in c. It is built upon hiredis to add supports for access to redis cluster. 
-To use chiredis, you need to follow the following steps.
+hiredis-cluster is a redis client library written in c. It is built upon hiredis to add supports for access to redis cluster. 
+To use hiredis-cluster, you need to follow the following steps.
 
 ## install hiredis
 
@@ -12,14 +12,14 @@ to compile the file test_1.c:
 
 If it compiles, then go to the next step.
 
-## install Chiredis
+## install hiredis-cluster
 
 use the command **make install** to install Chiredis. To verify that you have installed in successfully, go to the ./Demo directory, and use the following command to compile:
 **make**
 
-If the demos compile, then you have finished installing Chiredis.
+If the demos compile, then you have finished installing hiredis-cluster.
 
-## use Chiredis
+## use hiredis-cluster
 
-In the directory ./Demos, I provide you with some examples to show how to use Chiredis.
+In the directory ./Demos, I provide you with some examples to show how to use hiredis-cluster.
 
