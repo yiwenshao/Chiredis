@@ -81,7 +81,7 @@ void startTest (char *ip,int port,functionStruct *function) {
     }
 
     //step one: before creating the threads.    
-    function->init_out = function->init((void*)0);
+    function->init_out = function->init((void*)(&thread_input[0]));
 
     for(i=0;i<thread_count;i++) {
         int res = pthread_create(&th[i],NULL,__thread_worker,(void*)(&thread_input[i]));
