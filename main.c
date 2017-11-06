@@ -4,11 +4,32 @@
 #include<time.h>
 #include "my_bench.h"
 
-int main(){
-//init_global();
-//  pipe_example("192.168.1.21",6379,"now");
-    test_with_multiple_threads("192.168.1.22",6667);
-//    test_pipeline_with_multiple_threads("192.168.1.22",6667);
+void disconnect_after_connect(){
+    init_global();
+    clusterInfo *cluster = connectRedis("127.0.0.1",6667);
+    if(cluster != NULL) {
+        printf("connected to cluster\n");
+    }else{
+        printf("panic\n");
+    }
+    char key[10] = "key";
+    char value[10] = "value";
+    
+    set(cluster,key,value,1,1);
+    get(cluster,key,value,1,1);
+    printf("get value= %s\n",value);
+    
+    disconnectDatabase(cluster);
+    release_global();
+}
+
+int main() {
+    int i;
+    for(i=0;i<100;i++)
+        disconnect_after_connect();
     return 0;
 }
+
+
+
 

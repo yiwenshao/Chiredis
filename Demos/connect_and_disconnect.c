@@ -6,7 +6,7 @@
 
 void disconnect_after_connect(){
     init_global();
-    clusterInfo *cluster = connectRedis("192.168.1.22",6667);
+    clusterInfo *cluster = connectRedis("127.0.0.1",6667);
     if(cluster != NULL) {
         printf("connected to cluster\n");
     }else{

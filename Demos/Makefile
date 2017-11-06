@@ -7,7 +7,7 @@ ALL_TARGET=connect_and_disconnect example multi_nopipe PipelineCluster version
 ALL: $(ALL_TARGET)
 
 connect_and_disconnect: connect_and_disconnect.c
-	gcc -o $@ $^ $(COMMON_LIBS)
+	gcc -g -o $@ $^ $(COMMON_LIBS)
 
 example: example.c
 	gcc -o $@ $^ $(COMMON_LIBS)
