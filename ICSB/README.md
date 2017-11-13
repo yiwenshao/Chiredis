@@ -14,3 +14,27 @@ How to use ?
 1. mordify token.c
 2. make target source=token.c depend="-lchiredis -lhiredis"
 3. enjoy you benchmark
+
+
+
+### Use tinybenchmark for redis
+
+Modify benchmarkConfig/benchmark.config
+
++ keyLen: 
++ valueLen: 
++ totalCount: number of kv pairs for each thread
++ threadCount: number of threads
+
+
+
+
+```
+// start a pipeline test with default pipecount 20
+./tinyBenchmark ip port -s pipeline
+
+//start a normal test
+./tinyBenchmark ip port -s normal
+
+```
+
